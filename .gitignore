@@ -1,0 +1,6 @@
+# Ignore all, for now at least
+*
+# Dont ignore, ignore >:
+!.gitignore
+# I need you.
+!Sip.cpp
