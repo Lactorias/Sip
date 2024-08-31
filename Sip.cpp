@@ -7,6 +7,7 @@
 class Sip {
 public:
     // A method within the class to handle the logic
+    bool hadError = false;
     int run(int argc, char* argv[]){
        if (argc > 2) {
             std::cerr << "Using Sip Script" << std::endl;
@@ -17,6 +18,10 @@ public:
             return runPrompt();
        }
     }
+    void error(int line, std::string message){
+        report(line, "", message);
+    }
+
 private:
     int runFile(const std::string& path){
         std::ifstream file(path);
@@ -41,6 +46,10 @@ private:
     }
     void run(const std::string& source){
         std::cout << "Running: " << source << std::endl;
+    }
+    void report(int line, std::string where, std::string message){
+        std::cerr << "[Line " << line << "]" << where << ": " << message << std::endl;
+        hadError = true;
     }
 };
 
