@@ -1,27 +1,26 @@
 #include <stdio.h>
 #include <string>
+#include <variant>
 #include "./includes/Token.hpp"
 
-
-class BaseObject::BaseObject {
+template <typename T>
+class Object : public BaseObject {
 public:
-    virtual ~BaseObject() = default;
-
-    virtual std::string toString() const {
-        return "BaseObject";
+    Object(T value) : value_(value) {}
+    T getValue() const {
+        return value_;
     }
-
-    virtual bool equals(const BaseObject& other) const {
-        return this == &other;
-    }
+private:
+    T value_;
 };
+
+using thing = std::variant<int, std::string>;
 
 class Token::Token {
     const TokenType ty;
     const std::string lexeme; // lex eeeeeeem --- not lex me
-    const BaseObject literal;
+    const thing literal;
     const int line;
-    Token(TokenType ty, std::string lexeme, BaseObject literal, int line) : ty(ty), lexeme(lexeme), literal(literal), line(line) {}
 public:
     std::string toString(){
         //return ty + " " + lexeme + " " + literal;

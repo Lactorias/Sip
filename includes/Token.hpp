@@ -1,5 +1,8 @@
-#include <string>
 
+
+#include <string>
+#include <strstream>
+#include <variant>
 enum class TokenType {
     // Single-character tokens.
   LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
@@ -22,22 +25,24 @@ enum class TokenType {
   INT, BOOL, FLOAT, CHAR, DOUBLE,
 
   //End of File
-  EOFF
+  EOFF = EOF,
 };
 
-class BaseObject {
-public:
-    virtual ~BaseObject() = default;
-    virtual std::string toString();
-    virtual bool equals(const BaseObject& other);
-};
 
 class Token {
+public:
+    using LiteralValue = std::variant<int, std::string>;
+    Token(TokenType ty, std::string lexeme, LiteralValue literal, int line) : ty(ty), lexeme(lexeme), literal(literal), line(line) {}
+    explicit operator std::string() const {
+        return lexeme; 
+    } 
+    friend auto operator<<(std::ostream& os, const Token& token) -> std::ostream& {
+        os << token.lexeme;
+        return os;
+    }
+private:
     const TokenType ty;
     const std::string lexeme; // lex eeeeeeem --- not lex me
-    const BaseObject literal;
+    const LiteralValue literal;
     const int line;
-    Token(TokenType ty, std::string lexeme, BaseObject literal, int line);
-public:
-    std::string toString();
 };
