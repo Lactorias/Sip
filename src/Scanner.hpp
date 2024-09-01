@@ -1,7 +1,9 @@
+#include <cctype>
 #include <cstddef>
 #include <iterator>
 #include <stdio.h>
 #include <string>
+#include <unordered_map>
 #include <vector>
 //#include "./includes/Token.hpp"
 #include "Token.hpp"
@@ -10,6 +12,24 @@ class Scanner {
 public:
     const std::string source;
     std::vector<Token> tokens;
+    std::unordered_map<std::string, TokenType> keywords = {
+        {"and", TokenType::AND},
+        {"class", TokenType::CLASS},
+        {"else", TokenType::ELSE},
+        {"false", TokenType::FALSE},
+        {"for", TokenType::FOR},
+        {"fun", TokenType::FUN},
+        {"if", TokenType::IF},
+        {"nil", TokenType::NIL},
+        {"or", TokenType::OR},
+        {"print", TokenType::PRINT},
+        {"return", TokenType::RETURN},
+        {"super", TokenType::SUPER},
+        {"this", TokenType::THIS},
+        {"true", TokenType::TRUE},
+        {"var", TokenType::VAR},
+        {"while", TokenType::WHILE},
+    };
     Sip instance;
 
     size_t start = 0, current = 0, line = 1;
@@ -41,6 +61,24 @@ public:
         return source[current];
     }
 
+    auto peekNext() const -> char {
+        if (current + 1 >= source.length()) return '\0';
+        return source[current + 1];
+    }
+
+    auto isDigit(char c) const -> bool {
+        return c >= '0' && c <= '9';
+    }
+    auto isAlpha(char c) -> char {
+        return (c >= 'a' && c <= 'z') ||
+               (c >= 'A' && c <= 'Z') ||
+                c == '_';
+    }
+
+    auto isAlphaNumeric(char c) -> bool {
+        return isAlpha(c) || isDigit(c);
+    }
+
     void string(){
         while (peek() != '"' && !isAtEnd()){
             if (peek() == '\n') line++;
@@ -56,6 +94,25 @@ public:
         addToken(TokenType::STRING, value);
     }
 
+    void number(){
+        while (isDigit(peek())) advance();
+        if (peek() == '.' && isDigit(peekNext())) {
+            advance();
+            while (isDigit(peek())) advance();
+        }
+        addToken(TokenType::NUMBER, std::stod(source.substr(start, current - start)));
+    }
+    auto identifier() -> void {
+        while (isAlphaNumeric(peek())) advance();
+        auto text = source.substr(start, current - start);
+        if (keywords.contains(text)){
+            auto type = keywords[text];
+            addToken(type);
+        } else {
+            auto type = TokenType::IDENTIFIER;
+            addToken(type);
+        }
+    }
     void scanToken(){
         char c = advance();
         switch (c) {
@@ -100,10 +157,17 @@ public:
                 break;
 
             default:
-                instance.error(line, "Unexpected character.");
+                if (isDigit(c)){
+                    number();
+                } else if (isalnum(c)){
+                    identifier();
+                } else {
+                    instance.error(line, "Unexpected character.");
+                }
                 break;
         }
     }
+
 
     std::vector<Token> scanTokens(){
         while(!isAtEnd()){
