@@ -1,16 +1,18 @@
+#include <cstddef>
+#include <iterator>
 #include <stdio.h>
 #include <string>
 #include <vector>
-#include "./includes/Token.hpp"
-#include "./includes/Sip.hpp"
-
+//#include "./includes/Token.hpp"
+#include "Token.hpp"
+#include "Sip.hpp"
 class Scanner {
-private:
+public:
     const std::string source;
     std::vector<Token> tokens;
     Sip instance;
 
-    int start = 0, current = 0, line = 1;
+    size_t start = 0, current = 0, line = 1;
 
     Scanner(std::string source) : source(source) {}
    
@@ -23,7 +25,7 @@ private:
     }
 
     void addToken(TokenType ty, Token::LiteralValue literal = {}){
-        std::string text = source.substr(start, current);
+        std::string text = source.substr(start, current - start);
         tokens.push_back(Token(ty, text, literal, line));
     }
 

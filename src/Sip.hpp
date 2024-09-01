@@ -1,3 +1,8 @@
+#ifndef _SIP_H_
+#define _SIP_H_
+
+
+#include <cstddef>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -18,7 +23,7 @@ public:
             return runPrompt();
        }
     }
-    void error(int line, std::string message){
+    void error(size_t line, std::string message){
         report(line, "", message);
     }
 
@@ -47,14 +52,11 @@ private:
     void run(const std::string& source){
         std::cout << "Running: " << source << std::endl;
     }
-    void report(int line, std::string where, std::string message){
+    void report(size_t line, std::string where, std::string message){
         std::cerr << "[Line " << line << "]" << where << ": " << message << std::endl;
         hadError = true;
     }
 };
 
 // Define the global main function
-int main(int argc, char* argv[]) {
-    Sip sip;
-    return sip.run(argc, argv); // Call the class method from the main function
-}
+#endif // _SIP_H_

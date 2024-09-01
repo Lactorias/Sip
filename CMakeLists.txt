@@ -4,11 +4,46 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Project name
-project(SipProject)
+project(SipProject LANGUAGES CXX)
 
 # Set the C++ standard (optional but recommended)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 
 # Add the executable by specifying the source file
-add_executable(Sip Sip.cpp)
+
+add_compile_options(
+  -Wall
+  -Wextra
+  -pedantic-errors
+  -Wconversion
+  -Wsign-conversion
+  -Wdouble-promotion
+  -Wcast-align
+  -Wformat=2
+  -Wuninitialized
+  -Wnull-dereference
+  -Wnon-virtual-dtor
+  -Woverloaded-virtual
+  -Wdeprecated-copy-dtor
+  -Wold-style-cast
+  -Wzero-as-null-pointer-constant
+  -Wsuggest-override
+  -fstack-protector-strong
+)
+
+add_library(token src/Token.hpp)
+link_libraries(token)
+set_target_properties(token PROPERTIES LINKER_LANGUAGE CXX)
+add_library(sip src/Sip.hpp)
+link_libraries(sip)
+set_target_properties(sip PROPERTIES LINKER_LANGUAGE CXX)
+add_executable(compile src/main.cpp)
+
+
+
+
+
+
