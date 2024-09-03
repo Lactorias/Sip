@@ -1,9 +1,11 @@
 #include <cctype>
 #include <cstddef>
+#include <iostream>
 #include <iterator>
 #include <stdio.h>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 //#include "./includes/Token.hpp"
 #include "Token.hpp"
@@ -12,7 +14,8 @@ class Scanner {
 public:
     const std::string source;
     std::vector<Token> tokens;
-    std::unordered_map<std::string, TokenType> keywords = {
+    bool eaten_identifier = false;
+    inline const static std::unordered_map<std::string, TokenType> keywords = {
         {"and", TokenType::AND},
         {"class", TokenType::CLASS},
         {"else", TokenType::ELSE},
@@ -40,16 +43,17 @@ public:
         return current >= source.length();
     } 
 
-    char advance(){
+    auto advance() -> char {
         return source[current++];
     }
 
-    void addToken(TokenType ty, Token::LiteralValue literal = {}){
+    auto addToken(TokenType ty, Token::LiteralValue literal = {}) -> void {
         std::string text = source.substr(start, current - start);
-        tokens.push_back(Token(ty, text, literal, line));
+        tokens.push_back(Token(ty, std::move(text), literal, line));
+        start = current;
     }
 
-    bool match(char expected){
+    auto match(char expected) -> bool {
         if (isAtEnd()) return false;
         if (source[current] != expected) return false;
         current++;
@@ -57,7 +61,7 @@ public:
     }
 
     char peek(){
-        if (!isAtEnd()) return '\0';
+        if (isAtEnd()) return '\0';
         return source[current];
     }
 
@@ -104,14 +108,10 @@ public:
     }
     auto identifier() -> void {
         while (isAlphaNumeric(peek())) advance();
-        auto text = source.substr(start, current - start);
-        if (keywords.contains(text)){
-            auto type = keywords[text];
-            addToken(type);
-        } else {
-            auto type = TokenType::IDENTIFIER;
-            addToken(type);
-        }
+        const auto text = source.substr(start, current - start);
+        const auto it = keywords.find(text);
+        const auto type = (it != keywords.end()) ? it->second : TokenType::IDENTIFIER;
+        addToken(type);
     }
     void scanToken(){
         char c = advance();
