@@ -1,7 +1,0 @@
-[
-{
-  "directory": "/root/dev/active/Sip/Sip/build",
-  "command": "/usr/bin/c++   -Wall -Wextra -pedantic-errors -Wconversion -Wsign-conversion -Wdouble-promotion -Wcast-align -Wformat=2 -Wuninitialized -Wnull-dereference -Wnon-virtual-dtor -Woverloaded-virtual -Wdeprecated-copy-dtor -Wold-style-cast -Wzero-as-null-pointer-constant -Wsuggest-override -fstack-protector-strong -std=gnu++20 -o CMakeFiles/compile.dir/src/main.cpp.o -c /root/dev/active/Sip/Sip/src/main.cpp",
-  "file": "/root/dev/active/Sip/Sip/src/main.cpp"
-}
-]
