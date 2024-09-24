@@ -39,8 +39,12 @@ link_libraries(token)
 set_target_properties(token PROPERTIES LINKER_LANGUAGE CXX)
 add_library(sip src/Sip.hpp)
 link_libraries(sip)
+add_library(grammar src/Grammar.hpp)
+link_libraries(grammar)
+set_target_properties(grammar PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(sip PROPERTIES LINKER_LANGUAGE CXX)
 add_executable(compile src/main.cpp)
+add_executable(ast_generate tools/mainAST.cpp)
 
 
 

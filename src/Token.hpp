@@ -85,7 +85,7 @@ inline auto token_string(TokenType ty) -> std::string {
 
 class Token {
 public:
-    using LiteralValue = std::variant<std::monostate, int, std::string, double>;
+    using LiteralValue = std::variant<std::monostate, int, std::string>;
     Token(TokenType ty, std::string lexeme, LiteralValue literal, size_t line) : ty(ty), lexeme(lexeme), literal(literal), line(line) {}
     explicit operator std::string() const {
         return lexeme; 
