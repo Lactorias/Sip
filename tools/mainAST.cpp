@@ -1,9 +1,15 @@
+#include <algorithm>
 #include <array>
+#include <cctype>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
 
+auto trim(std::string& str) -> std::string {
+    str.erase(std::remove_if(str.begin(), str.end(), ::isspace), str.end());
+    return str;
+}
 // Split function to divide strings by a delimiter
 auto split(std::string s, const std::string& delimiter) -> std::vector<std::string> {
     auto to_return = std::vector<std::string>();
@@ -18,6 +24,16 @@ auto split(std::string s, const std::string& delimiter) -> std::vector<std::stri
     return to_return;
 }
 
+auto defineVisitor(std::ofstream& writer, const std::string& baseName, const std::array<std::string, 4>& types) -> void {
+    writer << "     virtual Visitor<R> {" << std::endl;
+    for (auto type : types){
+        auto typeName = trim(split(type, ":")[0]);
+        auto temp = baseName;
+        std::transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
+        writer << "     R visit" << typeName << baseName << "(" << typeName << " " << temp << ");" << std::endl; 
+    }
+    writer << "   }" << std::endl;
+}
 
 // Function to define a class based on base name, class name, and field list
 void defineType(std::ofstream& writer, const std::string& baseName, const std::string& className, const std::string& fieldList) {
@@ -42,6 +58,11 @@ void defineType(std::ofstream& writer, const std::string& baseName, const std::s
     }
     writer << " {}" << std::endl;
 
+    writer << std::endl;
+    writer << "     <R> R accept(Visitor<R> visitor) override {" << std::endl;
+    writer << "         return visitor->visit" << className << baseName << "(this);" << std::endl;
+    writer << "     }" << std::endl;
+
     // Fields
     for (const auto& field : fields) {
         writer << "    " << field << ";" << std::endl;
@@ -60,9 +81,15 @@ void defineAST(const std::string& outputDir, const std::string& baseName, const 
     }
     writer << "#include \"../src/Token.hpp\"" << std::endl;
     writer << "#include <memory>" << std::endl;
+    writer << "#include <variant>" << std::endl;
+    writer << "typedef std::variant<std::monostate, int, std::string> Object;" << std::endl;
     writer << std::endl;
     writer << "class " << baseName << "{" << std::endl;
     writer << "public: " << std::endl;
+    defineVisitor(writer, baseName, types);
+    writer << std::endl;
+    writer << "  virtual <R> R accept(Visitor<R> visitor);" << std::endl;
+    writer << "}" << std::endl;
     writer << "     " << baseName << "& " << "operator = (const " << baseName << "& other) = delete;" << std::endl;
     writer << "     " << baseName << "() = default;" << std::endl;
     writer << "     " << baseName << "(" << baseName << "& other) = delete;" << std::endl;
@@ -94,7 +121,7 @@ auto main(int argc, char* argv[]) -> int {
     defineAST(outputDir, "Expr", std::array<std::string, 4>{
         "Binary   : const Expr& left, const Token& oper, const Expr& right",
         "Grouping : const Expr& expression",
-        "Literal  : const std::variant<std::monostate, int, std::string>& value",
+        "Literal  : const Object& value",
         "Unary    : const Token& oper, const Expr& right",
     });
     return 0;
