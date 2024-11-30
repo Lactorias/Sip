@@ -38,18 +38,18 @@ $(OBJ_DIR)/$(MAIN).o: $(SRC_DIR)/$(MAIN).cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJ_DIR)/$(AST_PRINTER).o: $(SRC_DIR)/$(AST_PRINTER).cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -IoutputTests -c $< -o $@
 
 # Link all targets into a final exec
 # $@: The target name
 # $<: The first prerequisite
 # $^: All prerequisites
 # 5. Add a rule to link sources to the target
-$(MAIN_TARGET): $(OBJECTS)
-	$(CXX) $(LDFLAGS) $(OBJ_DIR)/$(MAIN).o  $^ -o $@ 
+$(MAIN_TARGET): $(OBJECTS) $(OBJ_DIR)/$(MAIN).o
+	$(CXX) $(LDFLAGS) $^ -o $@ 
 
-$(AST_PRINTER_TARGET): $(OBJECTS)
-	$(CXX) $(LDFLAGS) $(OBJ_DIR)/$(AST_PRINTER).o  $^ -o $@ 
+$(AST_PRINTER_TARGET): $(OBJECTS) $(OBJ_DIR)/$(AST_PRINTER).o  
+	$(CXX) $(LDFLAGS) $^ -o $@ 
 
 ############################################################################
 

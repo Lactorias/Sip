@@ -1,3 +1,8 @@
+# target
+compiler
+
+.vscode
+
 # Prerequisites
 *.d
 
@@ -30,12 +35,13 @@
 *.exe
 *.out
 *.app
+
 # Bin (as in trash)
 placeholder
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
-Makefile
 *.log
 build/
-compile_commands.json
+
+

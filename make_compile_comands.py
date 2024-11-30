@@ -7,6 +7,7 @@ FILES = [
     "main",
     "scanner",
     "token",
+    "ast_printer"
 ]
 
 if __name__ == "__main__":
