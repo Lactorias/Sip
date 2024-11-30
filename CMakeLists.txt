@@ -34,6 +34,9 @@ add_compile_options(
   -fstack-protector-strong
 )
 
+# include_directories(src)
+# file()
+
 add_library(token src/Token.hpp)
 link_libraries(token)
 set_target_properties(token PROPERTIES LINKER_LANGUAGE CXX)
@@ -41,13 +44,12 @@ add_library(sip src/Sip.hpp)
 link_libraries(sip)
 add_library(grammar src/Grammar.hpp)
 link_libraries(grammar)
+add_library(scanner src/Scanner.hpp)
+link_libraries(scanner)
 set_target_properties(grammar PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(sip PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(scanner PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(token PROPERTIES LINKER_LANGUAGE CXX)
 add_executable(compile src/main.cpp)
 add_executable(ast_generate tools/mainAST.cpp)
-
-
-
-
-
-
+add_executable(print src/ast_printer.cpp)

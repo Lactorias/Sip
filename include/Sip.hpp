@@ -1,36 +1,31 @@
 #ifndef _SIP_H_
 #define _SIP_H_
 
-
 #include <cstddef>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <stdexcept>
-#include <fstream>
 
 class Sip {
 public:
-    // A method within the class to handle the logic
     bool hadError = false;
-    int run(int argc, char* argv[]){
-       if (argc > 2) {
+    int run(int argc, char *argv[]) {
+        if (argc > 2) {
             std::cerr << "Using Sip Script" << std::endl;
             return 64;
-       } else if (argc == 2){
+        } else if (argc == 2) {
             return runFile(argv[1]);
-       } else {
+        } else {
             return runPrompt();
-       }
+        }
     }
-    void error(size_t line, std::string message){
-        report(line, "", message);
-    }
+    void error(size_t line, std::string message) { report(line, "", message); }
 
 private:
-    int runFile(const std::string& path){
+    int runFile(const std::string &path) {
         std::ifstream file(path);
-        if (!file.is_open()){
+        if (!file.is_open()) {
             std::cerr << "Error: Could not open file" << path << std::endl;
             return 1;
         }
@@ -40,23 +35,24 @@ private:
         file.close();
         return 0;
     }
-    int runPrompt(){
+    int runPrompt() {
         std::string line;
-        while (true){
+        while (true) {
             std::cout << "> ";
-            if (!std::getline(std::cin, line)) break;
+            if (!std::getline(std::cin, line))
+                break;
             run(line);
         }
         return 0;
     }
-    void run(const std::string& source){
+    void run(const std::string &source) {
         std::cout << "Running: " << source << std::endl;
     }
-    void report(size_t line, std::string where, std::string message){
-        std::cerr << "[Line " << line << "]" << where << ": " << message << std::endl;
+    void report(size_t line, std::string where, std::string message) {
+        std::cerr << "[Line " << line << "]" << where << ": " << message
+                  << std::endl;
         hadError = true;
     }
 };
 
-// Define the global main function
 #endif // _SIP_H_
