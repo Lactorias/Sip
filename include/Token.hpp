@@ -1,4 +1,5 @@
-
+#ifndef TOKEN_HPP
+#define TOKEN_HPP
 
 #include <string>
 #include <strstream>
@@ -48,12 +49,14 @@ public:
     const size_t line;
 };
 
-auto static token_string(Token::TokenType ty) -> char const *;
+auto token_string(Token::TokenType ty) -> char const *;
 
-auto operator<<(std::ostream &os, const Token::TokenType const& token) -> std::ostream & {
+inline auto operator<<(std::ostream &os, Token::TokenType const& token) -> std::ostream & {
     return os << token_string(token);
 }
 
-auto operator<<(std::ostream& os, Token const& token) -> std::ostream& {
+inline auto operator<<(std::ostream& os, Token const& token) -> std::ostream& {
     return os << token.lexeme;
 }
+
+#endif // TOKEN_HPP

@@ -1,5 +1,7 @@
-#include "../outputTests/Expr.hpp"
-#include "Scanner.hpp"
+#include <Expr.hpp>
+
+#include <Scanner.hpp>
+
 #include <fstream>
 #include <initializer_list>
 #include <memory>

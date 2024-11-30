@@ -1,6 +1,9 @@
 #include <Scanner.hpp>
+
 #include <iostream>
 #include <ostream>
+#include <fstream>
+#include <sstream>
 #include <string>
 
 // incl <ast/Binary>]
@@ -22,7 +25,7 @@
 // 
 // printer 
 //
-//
+//                                                            setup ast folder
 //
 // errorhandler
 
@@ -31,7 +34,7 @@
 /*
     include/
         ast/
-        ..
+
     src/
         
 */
@@ -42,21 +45,28 @@ void run(std::string input) {
     for (auto &token : tokens) {
         std::cout << token.ty << ": " << token << std::endl;
     }
+    auto const &errlog = scanner.get_errlog();
+    if (not errlog.empty()) {
+        std::cout << errlog << std::endl;
+    }
 }
 
-int runFile(const std::string &path) {
-    std::ifstream file(path);
+int run_file(const std::string &path) {
+    auto file = std::ifstream(path);
     if (!file.is_open()) {
         std::cerr << "Error: Could not open file" << path << std::endl;
         return 1;
     }
-    std::stringstream buffer;
+
+    auto buffer = std::stringstream{};
     buffer << file.rdbuf();
     run(buffer.str());
     file.close();
+
     return 0;
 }
-int runPrompt() {
+
+int run_prompt() {
     std::string line;
     while (true) {
         std::cout << "> ";
@@ -72,8 +82,8 @@ int main(int argc, char *argv[]) {
         std::cerr << "Using Sip Script" << std::endl;
         return 64;
     } else if (argc == 2) {
-        return runFile(argv[1]);
+        return run_file(argv[1]);
     } else {
-        return runPrompt();
+        return run_prompt();
     }
 }

@@ -1,4 +1,4 @@
-#include "./Token.hpp"
+#include <Token.hpp>
 #include <memory>
 
 class Expr {

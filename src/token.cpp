@@ -1,4 +1,4 @@
-#include "../include/Token.hpp"
+#include <Token.hpp>
 
 auto token_string(Token::TokenType ty) -> char const* {
     switch (ty) {
@@ -47,4 +47,6 @@ auto token_string(Token::TokenType ty) -> char const* {
         case Token::TokenType::DOUBLE: return "DOUBLE";
         case Token::TokenType::EOFF: return "EOFF";
     }
+    // UNREACHABLE
+    std::terminate();
 }
