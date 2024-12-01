@@ -3,6 +3,7 @@
 #include <memory>
 #include <utility>
 #include <variant>
+#include <any>
 
 using Object = std::variant<std::monostate, int, double, std::string>;
 using std::unique_ptr;
@@ -12,55 +13,29 @@ class Grouping;
 class Literal;
 class Unary;
 
-template <typename VisitorType, typename T, typename... Args>
 class Visitor {
 public:
-    T acceptBinary(Binary &binary, Args &&...args) {
-        return static_cast<VisitorType *>(this)->acceptBinary(binary, args...);
-    }
-    T acceptGrouping(Grouping &grouping, Args &&...args) {
-        return static_cast<VisitorType *>(this)->acceptGrouping(grouping,
-                                                                args...);
-    }
-    T acceptLiteral(Literal &literal, Args &&...args) {
-        return static_cast<VisitorType *>(this)->acceptLiteral(literal,
-                                                               args...);
-    }
-    T acceptUnary(Unary &unary, Args &&...args) {
-        return static_cast<VisitorType *>(this)->acceptUnary(unary, args...);
-    }
+    virtual Object acceptBinary(Binary &binary) = 0;
+
+    virtual Object acceptGrouping(Grouping &grouping) = 0;
+
+    virtual Object acceptLiteral(const Literal &literal) = 0;
+
+    virtual Object acceptUnary(Unary &unary) = 0;
 };
 
-template <typename Derived>
 class Expr {
 public:
-    template <typename Visitor, typename... Args>
-    auto visit(Visitor &visitor, Args &&...args) {
-        return static_cast<Derived *>(this)->visit(visitor,
-                                                   std::forward<Args>(args)...);
-    }
-
-    template<typename Concrete>
-    static auto from(std::unique_ptr<Concrete> p) -> std::unique_ptr<Expr> {
-        Concrete* const concrete_ptr = p.release();
-        Expr* const base_ptr = static_cast<Expr *>(concrete_ptr);
-        return std::unique_ptr<Expr>{base_ptr};
-    }
+    virtual Object visit(Visitor &visitor) = 0;
 };
 
-class Binary : public Expr<Binary> {
+class Binary : public Expr {
 public:
-    template <typename Expr_left, typename Expr_right>
-    Binary(unique_ptr<Expr_left> left, const Token &oper,
-           unique_ptr<Expr_right> right)
-        : left(Expr::from(std::move(left)))
-        , oper(oper)
-        , right(Expr::from(std::move(right)))
-        { }
+    Binary(unique_ptr<Expr> left, const Token &oper, unique_ptr<Expr> right)
+        : left(std::move(left)), oper(oper), right(std::move(right)) {}
 
-    template <typename Visitor, typename... Args>
-    auto visit(Visitor &visitor, Args &&...args) {
-        return visitor.acceptBinary(*this, std::forward<Args>(args)...);
+    Object visit(Visitor &visitor) override {
+        return visitor.acceptBinary(*this);
     }
 
     // unique_ptr
@@ -70,36 +45,29 @@ public:
     unique_ptr<Expr> right;
 };
 
-class Grouping : public Expr<Grouping> {
+class Grouping : public Expr {
 public:
-    template <typename Expr_>
-    Grouping(Expr_ &expression) : expression(expression) {}
-    template <typename Visitor, typename... Args>
-    auto visit(Visitor &visitor, Args &&...args) {
-        return visitor.acceptGrouping(*this, std::forward<Args>(args)...);
+    Grouping(Expr &expression) : expression(expression) {}
+    Object visit(Visitor &visitor) override {
+        return visitor.acceptGrouping(*this);
     }
     Expr &expression;
 };
 
-class Literal : public Expr<Literal> {
+class Literal : public Expr {
 public:
     Literal(Object value) : value(value) {}
-    template <typename Visitor, typename... Args>
-    auto visit(Visitor &visitor, Args &&...args) {
-        return visitor.acceptLiteral(*this, std::forward<Args>(args)...);
+    Object visit(Visitor &visitor) override {
+        return visitor.acceptLiteral(*this);
     }
     const Object value;
 };
 
-class Unary : public Expr<Unary> {
+class Unary : public Expr {
 public:
-    template <typename Expr_>
-    Unary(const Token oper, unique_ptr<Expr_> &&right)
+    Unary(const Token oper, unique_ptr<Expr> &&right)
         : oper(oper), right(std::move(right)) {}
-    template <typename Visitor, typename... Args>
-    auto visit(Visitor &visitor, Args &&...args) {
-        return visitor.acceptUnary(*this, std::forward<Args>(args)...);
-    }
+    Object visit(Visitor &visitor) override { return visitor.acceptUnary(*this); }
     const Token oper;
     unique_ptr<Expr> right;
 };
