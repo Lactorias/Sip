@@ -1,4 +1,7 @@
 #include <Scanner.hpp>
+#include "../outputTests/Expr.hpp"
+#include "../include/Parser.hpp"
+#include "../include/ast/Ast_Printer.hpp"
 
 #include <iostream>
 #include <ostream>
@@ -42,13 +45,10 @@
 void run(std::string input) {
     auto scanner = Scanner(input);
     auto tokens = scanner.scan_tokens();
-    for (auto &token : tokens) {
-        std::cout << token.ty << ": " << token << std::endl;
-    }
-    auto const &errlog = scanner.get_errlog();
-    if (not errlog.empty()) {
-        std::cout << errlog << std::endl;
-    }
+    auto parser = Parser(tokens);
+    auto expression = make_unique<Expr>(parser.parse());
+    auto printer = AST_Printer(); 
+    std::cout << printer.acceptExpr(expression); 
 }
 
 int run_file(const std::string &path) {

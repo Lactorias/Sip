@@ -1,3 +1,5 @@
+#ifndef EXPR
+#define EXPR
 #include <Token.hpp>
 #include <cstdint>
 #include <memory>
@@ -5,7 +7,7 @@
 #include <variant>
 #include <any>
 
-using Object = std::variant<std::monostate, int, double, std::string>;
+using Object = std::variant<std::monostate, int, double, std::string, bool>;
 using std::unique_ptr;
 
 class Binary;
@@ -15,6 +17,8 @@ class Unary;
 
 class Visitor {
 public:
+    virtual Object acceptExpr(Expr &expr) = 0;
+
     virtual Object acceptBinary(Binary &binary) = 0;
 
     virtual Object acceptGrouping(Grouping &grouping) = 0;
@@ -71,3 +75,5 @@ public:
     const Token oper;
     unique_ptr<Expr> right;
 };
+
+#endif // EXPR
