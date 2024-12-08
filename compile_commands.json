@@ -23,5 +23,10 @@
         "directory": ".",
         "command": "g++ -std=c++20 -Wall -Wextra -Iinclude -c src/ast_printer.cpp -o build/ast_printer.o",
         "file": "src/ast_printer.cpp"
+    },
+    {
+        "directory": ".",
+        "command": "g++ -std=c++20 -Wall -Wextra -Iinclude -c src/parser.cpp -o build/parser.o",
+        "file": "src/parser.cpp"
     }
 ]

@@ -2,11 +2,17 @@
 #include <Expr.hpp>
 #include <Token.hpp>
 #include <vector>
-#include "../include/Parser.hpp"
+#include <Parser.hpp>
 
-using std::unique_ptr;
 
-inline auto Parser::expression() -> unique_ptr<Expr> { return equality(); }
+
+inline auto Parser::expression() -> unique_ptr<Expr> {
+    return equality(); 
+}
+
+auto Parser::parse() -> unique_ptr<Expr>{
+    return expression();
+}
 
 auto Parser::equality() -> unique_ptr<Expr> {
     auto expr = comparison();
@@ -14,7 +20,7 @@ auto Parser::equality() -> unique_ptr<Expr> {
         auto op = previous();
         auto right = comparison();
         expr = std::make_unique<Binary>(
-            Binary(std::move(expr), op, std::move(right)));
+            Binary(std::move(expr), std::move(op), std::move(right)));
     }
     return expr;
 }
@@ -26,7 +32,7 @@ auto Parser::comparison() -> unique_ptr<Expr> {
         auto op = previous();
         auto right = term();
         expr = std::make_unique<Binary>(
-            Binary(std::move(expr), op, std::move(right)));
+            Binary(std::move(expr), std::move(op), std::move(right)));
     }
     return expr;
 }
@@ -37,7 +43,7 @@ auto Parser::term() -> unique_ptr<Expr> {
         auto op = previous();
         auto right = factor();
         expr = std::make_unique<Binary>(
-            Binary(std::move(expr), op, std::move(right)));
+            Binary(std::move(expr), std::move(op), std::move(right)));
     }
     return expr;
 }
@@ -48,7 +54,7 @@ auto Parser::factor() -> unique_ptr<Expr> {
         auto op = previous();
         auto right = unary();
         expr = std::make_unique<Binary>(
-            Binary(std::move(expr), op, std::move(right)));
+            Binary(std::move(expr), std::move(op), std::move(right)));
     }
     return expr;
 }
@@ -57,7 +63,7 @@ auto Parser::unary() -> unique_ptr<Expr> {
     if (match(Token::TokenType::BANG, Token::TokenType::MINUS)) {
         auto op = previous();
         auto right = unary();
-        return std::make_unique<Unary>(Unary(op, std::move(right)));
+        return std::make_unique<Unary>(Unary(std::move(op), std::move(right)));
     }
     return primary();
 }
@@ -70,16 +76,16 @@ auto Parser::primary() -> unique_ptr<Expr> {
     if (match(Token::TokenType::NIL))
         return std::make_unique<Literal>(nullptr);
     if (match(Token::TokenType::NUMBER, Token::TokenType::STRING))
-        return std::make_unique<Literal>(previous().literal);
+        return std::make_unique<Literal>(previous()->literal);
     if (match(Token::TokenType::LEFT_PAREN)) {
         auto expr = expression();
         consume(Token::TokenType::RIGHT_PAREN, "Expect ')' after expression");
-        return std::make_unique<Grouping>(expr);
+        return std::make_unique<Grouping>(std::move(expr));
     }
     throw error(peek(), "Expect expression");
 }
 
-auto Parser::consume(Token::TokenType type, std::string message) -> Token {
+auto Parser::consume(Token::TokenType type, std::string message) -> unique_ptr<Token> {
     if (check(type))
         return advance();
     throw error(peek(), message);
@@ -93,7 +99,7 @@ auto Parser::error(Token token, std::string message) -> ErrLog {
 auto Parser::synchronize() -> void {
     advance();
     while (!at_end()) {
-        if (previous().ty == Token::TokenType::SEMICOLON)
+        if (previous()->ty == Token::TokenType::SEMICOLON)
             return;
         switch (peek().ty) {
         case Token::TokenType::CLASS:
@@ -115,20 +121,20 @@ auto Parser::match(T... types) noexcept -> bool {
     return ((check(types) ? (Parser::advance(), true) : false) || ...);
 }
 
-auto Parser::check(Token::TokenType type) -> bool {
+auto Parser::check(Token::TokenType type) noexcept -> bool {
     if (Parser::at_end())
         return false;
     return Parser::peek().ty == type;
 }
 
-auto Parser::advance() -> Token {
+auto Parser::advance() noexcept -> unique_ptr<Token> {
     if (!Parser::at_end())
         ++current;
     return Parser::previous();
 }
 
-inline auto Parser::at_end() -> bool { return peek().ty == Token::TokenType::EOFF; }
+inline auto Parser::at_end() noexcept -> bool { return peek().ty == Token::TokenType::EOFF; }
 
-inline auto Parser::peek() -> Token { return tokens[current]; }
+inline auto Parser::peek() noexcept -> Token { return tokens[current]; }
 
-inline auto Parser::previous() -> Token { return tokens[current - 1]; }
+inline auto Parser::previous() noexcept -> unique_ptr<Token> { return std::make_unique<Token>(tokens[current - 1]); }

@@ -4,6 +4,7 @@ auto Scanner::get_errlog() -> ErrLog const & { return errlog_; }
 
 auto Scanner::add_token(Token::TokenType ty, Token::LiteralValue literal) -> void {
     auto text = source_.substr(start_, current_ - start_);
+    std::cout << text << ": <------- lexeme is" << '\n'; 
     tokens_.push_back(Token(ty, std::move(text), literal, line_));
     start_ = current_;
 }
@@ -39,7 +40,7 @@ auto Scanner::parse_string() -> void {
      }
      advance();
 
-     const auto value = source_.substr(start_ + 1, current_- 1);
+     const auto value = "\"" + source_.substr(start_ + 1, current_- 1);
      add_token(Token::TokenType::STRING, value);
 }
 

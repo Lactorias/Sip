@@ -14,19 +14,47 @@
 #include <Token.hpp>
 #include <ErrLog.hpp>
 
+/*
+    Sip is a regular language, such that its language is simple enough to be deduced through regular expressions. The following however is a more hands on approach to scanning!
+    The following class "Scanner" is what produces our tokens to interpret from, it is essentially a loop with an exhaustive switch case, aimed to produce tokens on the current
+    state of a lexeme. When the lexeme is exhausted/completed our token is finished and is allowed to be created and given to our Tokens vector! Neat!
+*/
 class Scanner {
 
 public:
-    Scanner(std::string source) : source_(source), errlog_{} {}
 
+    /* 
+        Scanner is constructed on-top of the source code passed here through main.cpp. We have logic to iterate through this source code and produce our tokens.
+    */
+    Scanner(std::string source) : source_(source), errlog_{} {}
+    /*
+        scan_tokens() makes this iteration through the source code possible, it begins our scanning process, meaning
+        it is a public function because of this.
+    */
     auto scan_tokens() -> std::vector<Token>;
+    /*
+        get_errlog(), obtains a const reference to the ErrLog object within the scanner class.
+    */
     auto get_errlog() -> ErrLog const&;
 
 private:
+    /*
+        at_end() determines if we still have characters in our source code to consume for our tokens.
+    */
     inline auto at_end() const noexcept -> bool { return current_ >= source_.length(); }
+    /*
+        advance() moves our current index forwards through the source code.
+    */
     inline auto advance() -> char { return source_[current_++]; }
 
+    /*
+    */
     auto peek() const noexcept -> char;
+    /*
+        peek_next(), there can be circumstances where we wish to view what the next character in the source code is,
+        this is especially useful in cases where we want to consume an entire literal value, and advance while
+        the next character is indeed a valid digit.
+    */
     auto peek_next() const noexcept -> char;
     auto match(char expected) noexcept -> bool;
 

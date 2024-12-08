@@ -1,7 +1,7 @@
 #include <Scanner.hpp>
-#include "../outputTests/Expr.hpp"
-#include "../include/Parser.hpp"
-#include "../include/ast/Ast_Printer.hpp"
+#include <Expr.hpp>
+#include <Parser.hpp>
+#include <Ast_Printer.hpp>
 
 #include <iostream>
 #include <ostream>
@@ -9,48 +9,30 @@
 #include <sstream>
 #include <string>
 
-// incl <ast/Binary>]
-// incl <ast/Binary>]
-// incl <ast/Binary>]
-
-// 
-// 1. a folder for the tingos
-// 2. fix cmake
-// 3. fix include
-// add more binary optiosn??
-
-// Scannner -> split
-// Sip -> runs the compiler -> not templated
-// token -> not temp but simple
-//
-// ast -> this is the one place, where we haev a real "folder"
-// split this into its  own compilation unit
-// 
-// printer 
-//
-//                                                            setup ast folder
-//
-// errorhandler
-
 // effective LUT -> perfect hashing
 
+
 /*
-    include/
-        ast/
-
-    src/
-        
-*/
-
+    run() is utilised when the compiler is executed with some parameter input, i.e a conversion occurs between user and compiler,
+    or the function is provided with an input file for example.
+*/ 
 void run(std::string input) {
     auto scanner = Scanner(input);
     auto tokens = scanner.scan_tokens();
+    for (auto const& ele : tokens) std::cout << ele.ty << '\n'; 
     auto parser = Parser(tokens);
-    auto expression = make_unique<Expr>(parser.parse());
+    auto expression = parser.parse();
+    if (!expression) {
+        std::cerr << "error : expression is null";
+        return;
+    }
     auto printer = AST_Printer(); 
-    std::cout << printer.acceptExpr(expression); 
+    std::cout << printer.resolve_to_string(printer.acceptExpr(*expression)) << '\n'; 
 }
-
+/*
+    run_file() is utilised when the compiler is executed with a file containing some input, this is read and passed to run(),
+    for processing.     
+*/
 int run_file(const std::string &path) {
     auto file = std::ifstream(path);
     if (!file.is_open()) {
@@ -65,7 +47,10 @@ int run_file(const std::string &path) {
 
     return 0;
 }
-
+/*
+    run_prompt() is used when the compiler is executed with no inputs at all, this triggers a conversation point between the user
+    and compiler, where promps are read and passed to run() for processing.
+*/
 int run_prompt() {
     std::string line;
     while (true) {
@@ -76,7 +61,9 @@ int run_prompt() {
     }
     return 0;
 }
-
+/*
+    main(), of course is the entry point to our program!
+*/
 int main(int argc, char *argv[]) {
     if (argc > 2) {
         std::cerr << "Using Sip Script" << std::endl;

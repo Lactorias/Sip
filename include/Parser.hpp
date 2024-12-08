@@ -5,7 +5,6 @@
 #include <ErrLog.hpp>
 #include <vector>
 
-using std::unique_ptr;
 
 class Parser {
 public:
@@ -28,7 +27,7 @@ private:
 
     auto primary() -> unique_ptr<Expr>;
 
-    auto consume(Token::TokenType type, std::string message) -> Token;
+    auto consume(Token::TokenType type, std::string message) -> unique_ptr<Token>;
 
     auto error(Token token, std::string message) -> ErrLog;
 
@@ -37,15 +36,15 @@ private:
     template<typename... T>
     auto match(T... types) noexcept -> bool;
 
-    auto check(Token::TokenType type) -> bool;
+    auto check(Token::TokenType type) noexcept -> bool;
 
-    auto advance() -> Token;
+    auto advance() noexcept -> unique_ptr<Token>;
 
-    inline auto at_end() -> bool;
+    inline auto at_end() noexcept -> bool;
 
-    inline auto peek() -> Token;
+    inline auto peek() noexcept -> Token;
 
-    inline auto previous() -> Token;
+    inline auto previous() noexcept -> unique_ptr<Token>;
 
 private: 
     std::vector<Token> tokens;    

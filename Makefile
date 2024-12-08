@@ -1,11 +1,14 @@
 CXX = g++
-CXXFLAGS = -std=c++20 -Wall -Wextra -Iinclude
+CXXFLAGS = -std=c++20 -Wall -Wextra -g -Iinclude
 LDFLAGS = 
 
 SRC_DIR = src
 SOURCES = $(SRC_DIR)/errlog.cpp \
           $(SRC_DIR)/scanner.cpp \
           $(SRC_DIR)/token.cpp \
+		  $(SRC_DIR)/parser.cpp \
+		  $(SRC_DIR)/ast_printer.cpp \
+		  
 
 
 
@@ -17,16 +20,16 @@ OBJECTS = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SOURCES))
 #
 # 1. Add the `.cpp` file name on the RHS
 MAIN = main
-AST_PRINTER = ast_printer
+# AST_PRINTER = ast_printer
 INSPECT = inspect
 
 # 2. Make a name for your target file 
 MAIN_TARGET = compiler
-AST_PRINTER_TARGET = printer
+# AST_PRINTER_TARGET = printer
 
 # 3. Add that target to the `all` rule
-all:$(OBJ_DIR) $(MAIN_TARGET) $(AST_PRINTER_TARGET) $(INSPECT_TARGET)
-
+all:$(OBJ_DIR) $(MAIN_TARGET) $(INSPECT_TARGET)
+#$(AST_PRINTER_TARGET)
 
 # obj files
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
@@ -37,8 +40,8 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 $(OBJ_DIR)/$(MAIN).o: $(SRC_DIR)/$(MAIN).cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(OBJ_DIR)/$(AST_PRINTER).o: $(SRC_DIR)/$(AST_PRINTER).cpp
-	$(CXX) $(CXXFLAGS) -IoutputTests -c $< -o $@
+#$(OBJ_DIR)/$(AST_PRINTER).o: $(SRC_DIR)/$(AST_PRINTER).cpp
+#	$(CXX) $(CXXFLAGS) -IoutputTests -c $< -o $@
 
 # Link all targets into a final exec
 # $@: The target name
@@ -48,8 +51,8 @@ $(OBJ_DIR)/$(AST_PRINTER).o: $(SRC_DIR)/$(AST_PRINTER).cpp
 $(MAIN_TARGET): $(OBJECTS) $(OBJ_DIR)/$(MAIN).o
 	$(CXX) $(LDFLAGS) $^ -o $@ 
 
-$(AST_PRINTER_TARGET): $(OBJECTS) $(OBJ_DIR)/$(AST_PRINTER).o  
-	$(CXX) $(LDFLAGS) $^ -o $@ 
+#$(AST_PRINTER_TARGET): $(OBJECTS) $(OBJ_DIR)/$(AST_PRINTER).o  
+#	$(CXX) $(LDFLAGS) $^ -o $@ 
 
 ############################################################################
 

@@ -12,7 +12,7 @@
 #include <string>
 #include <type_traits>
 #include <variant>
-using Object = std::variant<std::monostate, int, double, std::string>;
+using Object = std::variant<std::monostate, int, std::string, double, bool>;
 
 // helper type for the visitor #4
 template<class... Ts>
@@ -21,15 +21,15 @@ struct overloaded : Ts... { using Ts::operator()...; };
 
 class AST_Printer : public Visitor {
 public:
-    Object acceptExpr(Expr &expr);
+    virtual Object acceptExpr(Expr &expr) override;
 
-    Object acceptBinary(Binary &binary);
+    virtual Object acceptBinary(Binary &binary) override;
 
-    Object acceptGrouping(Grouping &grouping);
+    virtual Object acceptGrouping(Grouping &grouping) override;
 
-    Object acceptLiteral(const Literal &literal);
+    virtual Object acceptLiteral(const Literal &literal) override;
 
-    Object acceptUnary(Unary &unary);
+    virtual Object acceptUnary(Unary &unary) override;
 
     auto resolve_to_string(const Object& obj) -> std::string;
 

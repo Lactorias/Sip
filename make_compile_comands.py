@@ -1,13 +1,14 @@
 
 CXX = "g++"
-CXX_FLAGS = "-std=c++20 -Wall -Wextra -Iinclude"
+CXX_FLAGS = "-std=c++20 -Wall -Wextra -g -Iinclude"
 
 FILES = [
     "errlog",
     "main",
     "scanner",
     "token",
-    "ast_printer"
+    "ast_printer",
+    "parser"
 ]
 
 if __name__ == "__main__":
