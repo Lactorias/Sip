@@ -1,0 +1,54 @@
+#ifndef PARSER
+#define PARSER
+#include <Token.hpp>
+#include <Expr.hpp>
+#include <ErrLog.hpp>
+#include <vector>
+
+
+class Parser {
+public:
+    Parser(std::vector<Token> tokens) : tokens(tokens) { std::make_unique<ErrLog>(sip_logger); } 
+    
+    auto parse() -> unique_ptr<Expr>;
+
+private:
+    inline auto expression() -> unique_ptr<Expr>;
+
+    auto equality() -> unique_ptr<Expr>;
+
+    auto comparison() -> unique_ptr<Expr>;
+
+    auto term() -> unique_ptr<Expr>;
+
+    auto factor() -> unique_ptr<Expr>;
+
+    auto unary() -> unique_ptr<Expr>;
+
+    auto primary() -> unique_ptr<Expr>;
+
+    auto consume(Token::TokenType type, std::string message) -> unique_ptr<Token>;
+
+    auto error(Token token, std::string message) -> ErrLog;
+
+    auto synchronize() -> void;
+
+    template<typename... T>
+    auto match(T... types) noexcept -> bool;
+
+    auto check(Token::TokenType type) noexcept -> bool;
+
+    auto advance() noexcept -> unique_ptr<Token>;
+
+    inline auto at_end() noexcept -> bool;
+
+    inline auto peek() noexcept -> Token;
+
+    inline auto previous() noexcept -> unique_ptr<Token>;
+
+private: 
+    std::vector<Token> tokens;    
+    ErrLog sip_logger;
+    int current = 0;
+};
+#endif // PARSER
