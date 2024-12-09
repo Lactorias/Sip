@@ -15,7 +15,7 @@
 #include <ErrLog.hpp>
 
 /*
-    Sip is a regular language, such that its language is simple enough to be deduced through regular expressions. The following however is a more hands on approach to scanning!
+    Sip has a regular lexical grammar, such that its language is simple enough to be deduced through regular expressions. The following however is a more hands on approach to scanning!
     The following class "Scanner" is what produces our tokens to interpret from, it is essentially a loop with an exhaustive switch case, aimed to produce tokens on the current
     state of a lexeme. When the lexeme is exhausted/completed our token is finished and is allowed to be created and given to our Tokens vector! Neat!
 */
@@ -43,27 +43,40 @@ private:
     */
     inline auto at_end() const noexcept -> bool { return current_ >= source_.length(); }
     /*
-        advance() moves our current index forwards through the source code.
+        advance() moves our current index forwards through the source code, consumes the next character in source file.
     */
     inline auto advance() -> char { return source_[current_++]; }
 
     /*
+        peek(), peeks the current character without consuming it, useful for longer lexemes.
     */
     auto peek() const noexcept -> char;
     /*
         peek_next(), there can be circumstances where we wish to view what the next character in the source code is,
         this is especially useful in cases where we want to consume an entire literal value, and advance while
-        the next character is indeed a valid digit.
+        the next character is indeed a valid digit, or cases in decimal, we dont want to consume a "." if theres no 
+        digit after it.
     */
     auto peek_next() const noexcept -> char;
+    /*
+        match(), returns true if the input character matches the current character in the source file, useful for two character long operators,
+        such as "!=". If the character matches, it will also advance forward through the source file.
+    */
     auto match(char expected) noexcept -> bool;
 
     auto parse_string() -> void ;
     auto parse_number() -> void ;
     auto parse_identifier() -> void;
 
+    /*
+        scan_token(), uses a switch case to appropriately build the next token correctly, this works by consuming individual characters until a lexeme for the token
+        type is formed!
+    */
     auto scan_token() -> void;
 
+    /*
+        add_token(), assembles and adds the finished token directly into the tokens vector, moves start_ to current_ as the lexeme is now finished. 
+    */
     auto add_token(Token::TokenType ty, Token::LiteralValue literal = {}) -> void;
 
 private:

@@ -9,6 +9,7 @@ FILES = [
     "token",
     "ast_printer",
     "parser"
+    "interpreter"
 ]
 
 if __name__ == "__main__":
