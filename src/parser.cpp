@@ -4,16 +4,48 @@
 #include <vector>
 #include <Parser.hpp>
 
+/*
+    Sip's parsing favors and implements left recursion as a recursive descent parser, we use C style operator precedence and associativity rules. 
+    The following functions highlight each key piece of our syntactic grammar that we will parse, the precedence is 
+    implemented from lowest to highest as seen in our function formatting, going from
+    equality to unary in precedence.
 
+    Each function is a component of our grammar, and has the ability to relate a subexpression at its presedence level or higher.
+    Recursive descent parsing allows us to effectively do a 1:1 conversion between our grammar to code.
 
+    expression     → equality ;
+    equality       → comparison ( ( "!=" | "==" ) comparison )* ;
+    comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+    term           → factor ( ( "-" | "+" ) factor )* ;
+    factor         → unary ( ( "/" | "*" ) unary )* ;
+    unary          → ( "!" | "-" ) unary
+                    | primary ;
+    primary        → NUMBER | STRING | "true" | "false" | "nil"
+                    |"(" expression ")" ;
+
+    The parser operates similarly to the scanner, except instead of reading source code, we are now reading our scanned tokens in the
+    parser.
+*/
+
+/*
+    expression(), The highest level of our recursive descent parsing, this can go into any piece of our grammar,
+    as we stated that subexpressions can go to their presendence level or higher, so since we start at the bottom, we can
+    go anywhere.
+*/
 inline auto Parser::expression() -> unique_ptr<Expr> {
     return equality(); 
 }
 
+/*
+    parse(), kicks off our parsing, starting at the 'lowest' level "expression".    
+*/
 auto Parser::parse() -> unique_ptr<Expr>{
     return expression();
 }
 
+/*
+    equality(), handles the grammar rules for operators such as "==" and "!=".
+*/
 auto Parser::equality() -> unique_ptr<Expr> {
     auto expr = comparison();
     while (match(Token::TokenType::BANG_EQUAL, Token::TokenType::EQUAL_EQUAL)) {
@@ -24,7 +56,9 @@ auto Parser::equality() -> unique_ptr<Expr> {
     }
     return expr;
 }
-
+/*
+    comparison(), handles the grammar rules for operators such as ">", and "<=".
+*/
 auto Parser::comparison() -> unique_ptr<Expr> {
     auto expr = term();
     while (match(Token::TokenType::GREATER, Token::TokenType::GREATER_EQUAL,
@@ -36,7 +70,9 @@ auto Parser::comparison() -> unique_ptr<Expr> {
     }
     return expr;
 }
-
+/*
+    term(), handles the grammar rules for infix arithmatic operators such as "+" and "-"
+*/
 auto Parser::term() -> unique_ptr<Expr> {
     auto expr = factor();
     while (match(Token::TokenType::MINUS, Token::TokenType::PLUS)) {
@@ -47,7 +83,9 @@ auto Parser::term() -> unique_ptr<Expr> {
     }
     return expr;
 }
-
+/*
+    factor(), handles the grammar rules for multiplicative operators such as "*", and "/"
+*/
 auto Parser::factor() -> unique_ptr<Expr> {
     auto expr = unary();
     while (match(Token::TokenType::SLASH, Token::TokenType::STAR)) {
@@ -58,7 +96,9 @@ auto Parser::factor() -> unique_ptr<Expr> {
     }
     return expr;
 }
-
+/*
+    unary(), handles the grammar rules for prefix operators such as "!" and "-" <-- negation i.e -5
+*/
 auto Parser::unary() -> unique_ptr<Expr> {
     if (match(Token::TokenType::BANG, Token::TokenType::MINUS)) {
         auto op = previous();
@@ -67,7 +107,9 @@ auto Parser::unary() -> unique_ptr<Expr> {
     }
     return primary();
 }
-
+/*
+    primary(), handles grammar rules for literals and parenthesized expressions
+*/
 auto Parser::primary() -> unique_ptr<Expr> {
     if (match(Token::TokenType::FALSE))
         return std::make_unique<Literal>(false);

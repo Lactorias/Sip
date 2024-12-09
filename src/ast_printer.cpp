@@ -18,7 +18,6 @@ Object AST_Printer::acceptExpr(Expr &expr) {
 }
 
 Object AST_Printer::acceptBinary(Binary &binary) {
-    std::cout << "hi binary here : " << binary.oper->lexeme << '\n';
     return parenthesize(binary.oper->lexeme, *binary.left, *binary.right);
 }
 

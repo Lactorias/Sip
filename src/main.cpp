@@ -2,6 +2,7 @@
 #include <Expr.hpp>
 #include <Parser.hpp>
 #include <Ast_Printer.hpp>
+#include <Interpreter.hpp>
 
 #include <iostream>
 #include <ostream>
@@ -17,17 +18,16 @@
     or the function is provided with an input file for example.
 */ 
 void run(std::string input) {
+    auto interpreter = Interpreter();
     auto scanner = Scanner(input);
     auto tokens = scanner.scan_tokens();
-    for (auto const& ele : tokens) std::cout << ele.ty << '\n'; 
     auto parser = Parser(tokens);
     auto expression = parser.parse();
     if (!expression) {
         std::cerr << "error : expression is null";
         return;
     }
-    auto printer = AST_Printer(); 
-    std::cout << printer.resolve_to_string(printer.acceptExpr(*expression)) << '\n'; 
+    interpreter.interpret(*expression);
 }
 /*
     run_file() is utilised when the compiler is executed with a file containing some input, this is read and passed to run(),

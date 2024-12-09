@@ -8,6 +8,8 @@ SOURCES = $(SRC_DIR)/errlog.cpp \
           $(SRC_DIR)/token.cpp \
 		  $(SRC_DIR)/parser.cpp \
 		  $(SRC_DIR)/ast_printer.cpp \
+		  $(SRC_DIR)/interpreter.cpp \
+		  $(SRC_DIR)/runtimeerror.cpp \
 		  
 
 
