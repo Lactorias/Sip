@@ -2,6 +2,7 @@
 #define INTERPRETER
 
 #include <Expr.hpp>
+#include <Token.hpp>
 
 
 
@@ -34,6 +35,10 @@ private:
     auto extract_double(const Object& object) -> double;
 
     auto stringify(Object object) -> std::string;
+
+    auto check_number_operand(Token& op, Object &operand) -> void;
+
+    auto check_number_operand(Token& op, Object& left, Object& right) -> void;
 
 };
 

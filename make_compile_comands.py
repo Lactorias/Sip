@@ -10,6 +10,7 @@ FILES = [
     "ast_printer",
     "parser"
     "interpreter"
+    "runtimeerror"
 ]
 
 if __name__ == "__main__":

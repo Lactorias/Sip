@@ -3,14 +3,19 @@
 #include <variant>
 #include <iostream>
 #include <Ast_Printer.hpp>
+#include <RuntimeError.hpp>
 
 AST_Printer use_me;
 
 Object Interpreter::acceptExpr(Expr &expr) { return nullptr; }
 
 auto Interpreter::interpret(Expr &expr) -> void {
-    Object value = evaluate(expr);
-    std::cout << stringify(value) << '\n';
+    try {
+        Object value = evaluate(expr);
+        std::cout << stringify(value) << '\n';
+    } catch (RuntimeError error) {
+        error.runtime_error(error);
+    }
 }
 
 Object Interpreter::acceptBinary(Binary &binary) {
@@ -19,6 +24,7 @@ Object Interpreter::acceptBinary(Binary &binary) {
 
     switch (binary.oper->ty) {
         case Token::TokenType::MINUS:
+            check_number_operand(*binary.oper, right);
             return extract_double(left) - extract_double(right);
         case Token::TokenType::SLASH:
             return extract_double(left) / extract_double(right);
@@ -31,7 +37,7 @@ Object Interpreter::acceptBinary(Binary &binary) {
             if (std::holds_alternative<std::string>(left) && std::holds_alternative<std::string>(right)) {
                 return std::get<std::string>(left) + std::get<std::string>(right);
             }
-            break;
+            throw RuntimeError(*binary.oper, "Operands must be two numbers, or two strings.");
         case Token::TokenType::GREATER:
             return extract_double(left) > extract_double(right);
         case Token::TokenType::GREATER_EQUAL:
@@ -115,4 +121,14 @@ auto Interpreter::stringify(Object object) -> std::string {
         return text;
     }
     return use_me.resolve_to_string(object); 
+}
+
+auto Interpreter::check_number_operand(Token& op, Object &operand) -> void {
+    if (std::holds_alternative<double>(operand)) return;
+    throw RuntimeError(op, "Operand must be a number");
+}
+
+auto Interpreter::check_number_operand(Token& op, Object& left, Object& right) -> void {
+    if (std::holds_alternative<double>(left) && std::holds_alternative<double>(right)) return;
+    throw RuntimeError(op, "Operands must be numbers");
 }
