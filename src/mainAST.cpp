@@ -19,11 +19,26 @@ auto split(const std::string &s, const std::string &delimiter)
     return result;
 }
 
+auto to_upper_str(const std::string& input) noexcept -> std::string {
+    auto result = input;
+    std::transform(result.begin(), result.end(), result.begin(), [](char c){
+        return toupper(c);
+    });
+    return result;
+}
+
+auto to_lower_str(const std::string& input) noexcept -> std::string {
+    auto result = input;
+    std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c){
+        return tolower(c);
+    });
+    return result;
+} 
+
 void defineType(std::ofstream &writer, const std::string &baseName,
                 const std::string &className, const std::string &fieldList) {
     writer << "\n";
-    writer << "class " << className << " : public " << baseName << "<"
-           << className << "> {" << std::endl;
+    writer << "class " << className << " : public " << baseName << " {" << std::endl;
     writer << "public:" << std::endl;
 
     // Constructor
@@ -42,19 +57,20 @@ void defineType(std::ofstream &writer, const std::string &baseName,
         std::string name = field.substr(nameStart);
 
         if (i != fields.size() - 1) {
-            writer << " " << name << "(" << name << "),";
+            writer << " " << name << "(std::move(" << name << ")),";
         } else {
-            writer << " " << name << "(" << name << ")";
+            writer << " " << name << "(std::move(" << name << "))";
         }
     }
     writer << " {}" << std::endl;
 
     // Visit function
-    writer << "    template<typename Visitor, typename... Args>" << '\n';
-    writer << "    auto visit(Visitor &visitor, Args &&...args) {" << '\n';
-    writer << "        return visitor.accept" << className
-           << "(*this, std::forward<Args>(args)...);" << '\n';
-    writer << "    }" << '\n';
+
+    writer << '\n';
+
+    writer << "    Object visit(Visitor &visitor) override {" << '\n';
+    writer << "        return visitor.accept" << className << "(*this);" << '\n';
+    writer << "    }" << '\n' << '\n';
 
     // Fields
     for (const auto &field : fields) {
@@ -64,7 +80,7 @@ void defineType(std::ofstream &writer, const std::string &baseName,
 }
 // Functioni to define the AST
 void defineAST(const std::string &outputDir, const std::string &baseName,
-               const std::array<std::string, 4> &types) {
+               const std::vector<std::string> &types) {
     auto path = outputDir + "/" + baseName + ".hpp";
     std::ofstream writer(path, std::ios::out | std::ios::binary);
     if (!writer.is_open()) {
@@ -72,59 +88,47 @@ void defineAST(const std::string &outputDir, const std::string &baseName,
                   << std::endl;
         return;
     }
-    writer << "#include \"../src/Token.hpp\"" << std::endl;
+    writer << "#ifndef " << to_upper_str(baseName) << '\n';
+    writer << "#define " << to_upper_str(baseName) << '\n';
+    writer << "#include <Token.hpp>" << std::endl;
+    writer << "#include <Expr.hpp>" << '\n';
     writer << "#include <variant>" << std::endl;
     writer << "#include <memory>" << '\n';
     writer << "#include <utility>" << '\n';
-    writer << "typedef std::variant<std::monostate, int, std::string> Object;"
+    writer << "using Object = std::variant<std::monostate, int, std::string, double, bool>;"
            << std::endl;
     writer << "using std::unique_ptr;" << '\n';
 
     writer << std::endl;
-    writer << "class Binary;" << '\n';
-    writer << "class Grouping;" << '\n';
-    writer << "class Literal;" << '\n';
-    writer << "class Unary;" << '\n';
+
+    for (auto const& type : types) {
+        auto type_parts = split(type, ":");
+        auto class_name = type_parts[0];
+        class_name.erase(0, class_name.find_first_not_of(" \t"));
+        class_name.erase(class_name.find_last_not_of(" \t") + 1);
+        writer << "class " << class_name << ";" << '\n';
+    }
+    writer << "class " << baseName << ";" << '\n';
     writer << '\n';
-    writer << "template <typename VisitorType, typename T, typename... Args>"
-           << '\n';
-    writer << "class Visitor {" << '\n';
-    writer << "public:" << '\n';
-    writer << "    T acceptBinary(Binary &binary, Args &&...args) {" << '\n';
-    writer << "        return static_cast<VisitorType "
-              "*>(this)->acceptBinary(binary, args...);"
-           << '\n';
-    writer << "    }" << '\n';
-    writer << "    T acceptGrouping(Grouping &grouping, Args &&...args) {"
-           << '\n';
-    writer << "        return static_cast<VisitorType "
-              "*>(this)->acceptGrouping(grouping, args...);"
-           << '\n';
-    writer << "    }" << '\n';
-    writer << "    T acceptLiteral(Literal &literal, Args &&...args) {" << '\n';
-    writer << "        return static_cast<VisitorType "
-              "*>(this)->acceptLiteral(literal, args...);"
-           << '\n';
-    writer << "    }" << '\n';
-    writer << "    T acceptUnary(Unary &unary, Args &&...args) {" << '\n';
-    writer << "        return static_cast<VisitorType "
-              "*>(this)->acceptUnary(unary, args...);"
-           << '\n';
-    writer << "    }" << '\n';
-    writer << "};" << '\n';
 
     writer << '\n';
-    writer << "template <typename Derived>" << '\n';
-    writer << "class " << baseName << " {" << '\n';
+    writer << "class Visitor {" << '\n';
     writer << "public:" << '\n';
-    writer << "    template <typename Visitor, typename... Args>" << '\n';
-    writer << "    auto visit(Visitor &visitor, Args &&...args) {" << '\n';
-    writer << "        return static_cast<Derived *>(this)->visit(visitor, "
-              "std::forward<Args>(args)...);"
-           << '\n';
-    writer << "    }" << '\n';
-    writer << "};";
-    writer << '\n';
+
+    for (auto const& type : types) {
+        auto type_parts = split(type, ":");
+        auto class_name = type_parts[0];
+        class_name.erase(0, class_name.find_first_not_of(" \t"));
+        class_name.erase(class_name.find_last_not_of(" \t") + 1);
+        writer <<  "    virtual Object accept" << class_name << "(" << class_name << " &" << to_lower_str(class_name) << ") = 0;" << '\n' << '\n';
+    }
+    writer <<  "    virtual Object accept" << baseName << "(" << baseName << " &" << to_lower_str(baseName) << ") = 0;" << '\n' << '\n';
+    writer << "};" << '\n';
+
+    writer << "class " <<  baseName << " {" << '\n';
+    writer << "public:" << '\n';
+    writer << "    virtual Object visit(Visitor &visitor) = 0;" << '\n';
+    writer << "};" << '\n';
 
     for (const auto &type : types) {
         auto typeParts = split(type, ":");
@@ -138,6 +142,9 @@ void defineAST(const std::string &outputDir, const std::string &baseName,
             defineType(writer, baseName, className, fields);
         }
     }
+
+    writer << '\n' << '\n';
+    writer << "#endif // " << to_upper_str(baseName) << '\n';
 }
 
 // Main function to execute the AST generation
@@ -148,12 +155,17 @@ auto main(int argc, char *argv[]) -> int {
     }
     auto outputDir = argv[1]; // Argument for output directory
     defineAST(outputDir, "Expr",
-              std::array<std::string, 4>{
-                  "Binary   : unique_ptr<Expr>& left, const Token& oper, "
-                  "const Expr& right",
-                  "Grouping : const Expr& expression",
-                  "Literal  : const Object& value",
-                  "Unary    : const Token& oper, const Expr& right",
+              std::vector<std::string>{
+                  "Binary   : unique_ptr<Expr> left, unique_ptr<Token> oper, "
+                  "unique_ptr<Expr> right",
+                  "Grouping : unique_ptr<Expr> expression",
+                  "Literal  : const Object value",
+                  "Unary    : unique_ptr<Token> oper, unique_ptr<Expr> right",
+              });
+    defineAST(outputDir, "Stmt", 
+              std::vector<std::string>{
+                 "Expression : unique_ptr<Expr> expression",
+                 "Print      : unique_ptr<Expr> expression"
               });
     return 0;
 }
