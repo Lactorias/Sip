@@ -19,9 +19,12 @@ template<class... Ts>
 struct overloaded : Ts... { using Ts::operator()...; };
 
 
-class AST_Printer : public Visitor {
+class AST_Printer : public VisitorExpr {
 public:
+
     virtual Object acceptExpr(Expr &expr) override;
+
+    virtual Object acceptVariable(Variable &variable) override;
 
     virtual Object acceptBinary(Binary &binary) override;
 
@@ -31,7 +34,7 @@ public:
 
     virtual Object acceptUnary(Unary &unary) override;
 
-    auto resolve_to_string(const Object& obj) -> std::string;
+    static auto resolve_to_string(const Object& obj) -> std::string;
 
 private:
     template <typename Expr>

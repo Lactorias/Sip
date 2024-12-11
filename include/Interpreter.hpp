@@ -3,17 +3,28 @@
 
 #include <Expr.hpp>
 #include <Token.hpp>
-
-
+#include <Stmt.hpp>
+#include <vector>
+#include <Environment.hpp>
 
 /*
     To interpret our language in the early stages, we will directly execute the syntax tree itself.
 */
 
-class Interpreter : public Visitor {
+class Interpreter : public VisitorExpr, public VisitorStmt {
 public:
 
-    auto interpret(Expr &expr) -> void;
+    auto interpret(std::vector<unique_ptr<Stmt>> statements) -> void;
+
+    virtual Object acceptVariable(Variable &variable) override;
+
+    virtual Object acceptVar(Var &var) override;
+
+    virtual Object acceptExpression(Expression &expression) override;
+
+    virtual Object acceptPrint(Print &print) override;
+
+    virtual Object acceptStmt(Stmt &stmt) override;
 
     virtual Object acceptExpr(Expr &expr) override;
 
@@ -28,6 +39,8 @@ public:
 private:
     auto evaluate(Expr &expr) -> Object;
 
+    auto execute(Stmt &stmt) -> void;
+
     auto is_truth(Object &object) -> bool;
 
     auto is_equal(Object &a, Object &b) -> bool;
@@ -40,6 +53,8 @@ private:
 
     auto check_number_operand(Token& op, Object& left, Object& right) -> void;
 
+private:
+    Environment environment;
 };
 
 #endif // INTERPRETER
