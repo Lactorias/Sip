@@ -39,7 +39,7 @@ auto Scanner::parse_string() -> void {
      }
      advance();
 
-     const auto value = "\"" + source_.substr(start_ + 1, current_- 1);
+     const auto value = source_.substr(start_ + 1, current_- start_ - 2);
      add_token(Token::TokenType::STRING, value);
 }
 

@@ -1,6 +1,7 @@
 #include <ErrLog.hpp>
 #include <Expr.hpp>
 #include <Token.hpp>
+#include <Stmt.hpp>
 #include <vector>
 #include <Parser.hpp>
 
@@ -39,8 +40,45 @@ inline auto Parser::expression() -> unique_ptr<Expr> {
 /*
     parse(), kicks off our parsing, starting at the 'lowest' level "expression".    
 */
-auto Parser::parse() -> unique_ptr<Expr>{
-    return expression();
+auto Parser::parse() -> std::vector<unique_ptr<Stmt>> {
+    auto statements = std::vector<unique_ptr<Stmt>>();
+    while (!at_end()) statements.push_back(declaration());
+    return statements;
+}
+
+auto Parser::declaration() -> unique_ptr<Stmt> {
+    try {
+        if (match(Token::TokenType::VAR)) return var_declaration();
+        return statement();
+    } catch (ErrLog error) {
+        synchronize();
+        return nullptr;
+    }
+}
+
+auto Parser::var_declaration() -> unique_ptr<Stmt> {
+    auto name = consume(Token::TokenType::IDENTIFIER, "Expect variable name.");
+    unique_ptr<Expr> initializer;
+    if (match(Token::TokenType::EQUAL)) initializer = expression();
+    consume(Token::TokenType::SEMICOLON, "Expect ';' after variable declaration.");
+    return std::make_unique<Var>(std::move(name), std::move(initializer));
+}
+
+auto Parser::statement() -> unique_ptr<Stmt> {
+    if (match(Token::TokenType::PRINT)) return print_statement();
+    return expression_statement();
+}
+
+auto Parser::print_statement() -> unique_ptr<Stmt> {
+    auto value = expression();
+    consume(Token::TokenType::SEMICOLON, "Expect a ';' after value.");
+    return std::make_unique<Print>(std::move(value));
+}
+
+auto Parser::expression_statement() -> unique_ptr<Stmt> {
+    auto expr = expression();
+    consume(Token::TokenType::SEMICOLON, "Expect a ';' after expression.");
+    return std::make_unique<Expression>(std::move(expr));
 }
 
 /*
@@ -119,15 +157,19 @@ auto Parser::primary() -> unique_ptr<Expr> {
         return std::make_unique<Literal>(nullptr);
     if (match(Token::TokenType::NUMBER, Token::TokenType::STRING))
         return std::make_unique<Literal>(previous()->literal);
+    if (match(Token::TokenType::IDENTIFIER))
+        return std::make_unique<Variable>(previous());
     if (match(Token::TokenType::LEFT_PAREN)) {
         auto expr = expression();
         consume(Token::TokenType::RIGHT_PAREN, "Expect ')' after expression");
         return std::make_unique<Grouping>(std::move(expr));
     }
+    std::cerr << "unexpected token: " << peek().ty << '\n';
     throw error(peek(), "Expect expression");
 }
 
 auto Parser::consume(Token::TokenType type, std::string message) -> unique_ptr<Token> {
+    if (at_end()) throw error(peek(), "end of input.");
     if (check(type))
         return advance();
     throw error(peek(), message);
@@ -177,6 +219,7 @@ auto Parser::advance() noexcept -> unique_ptr<Token> {
 
 inline auto Parser::at_end() noexcept -> bool { return peek().ty == Token::TokenType::EOFF; }
 
+[[nodiscard]]
 inline auto Parser::peek() noexcept -> Token { return tokens[current]; }
 
 inline auto Parser::previous() noexcept -> unique_ptr<Token> { return std::make_unique<Token>(tokens[current - 1]); }

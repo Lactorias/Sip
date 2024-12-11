@@ -3,6 +3,7 @@
 #include <Token.hpp>
 #include <Expr.hpp>
 #include <ErrLog.hpp>
+#include <Stmt.hpp>
 #include <vector>
 
 
@@ -10,9 +11,19 @@ class Parser {
 public:
     Parser(std::vector<Token> tokens) : tokens(tokens) { std::make_unique<ErrLog>(sip_logger); } 
     
-    auto parse() -> unique_ptr<Expr>;
+    auto parse() -> std::vector<unique_ptr<Stmt>>;
 
 private:
+    auto statement() -> unique_ptr<Stmt>;
+
+    auto declaration() -> unique_ptr<Stmt>;
+
+    auto var_declaration() -> unique_ptr<Stmt>;
+
+    auto print_statement() -> unique_ptr<Stmt>;
+
+    auto expression_statement() -> unique_ptr<Stmt>;
+
     inline auto expression() -> unique_ptr<Expr>;
 
     auto equality() -> unique_ptr<Expr>;

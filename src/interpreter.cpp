@@ -3,20 +3,28 @@
 #include <variant>
 #include <iostream>
 #include <Ast_Printer.hpp>
+#include <Expr.hpp>
+#include <Stmt.hpp>
 #include <RuntimeError.hpp>
-
-AST_Printer use_me;
 
 Object Interpreter::acceptExpr(Expr &expr) { return nullptr; }
 
-auto Interpreter::interpret(Expr &expr) -> void {
+auto Interpreter::interpret(std::vector<unique_ptr<Stmt>> statements) -> void {
     try {
-        Object value = evaluate(expr);
-        std::cout << stringify(value) << '\n';
+        for (auto& statement : statements) {
+            execute(*statement);
+        }
     } catch (RuntimeError error) {
         error.runtime_error(error);
     }
 }
+
+auto Interpreter::execute(Stmt &stmt) -> void {
+    stmt.visit(*this);
+}
+
+Object Interpreter::acceptStmt(Stmt &stmt) { return std::monostate(); }
+
 
 Object Interpreter::acceptBinary(Binary &binary) {
     Object left = evaluate(*binary.left);
@@ -101,8 +109,30 @@ auto Interpreter::evaluate(Expr &expr) -> Object {
     return expr.visit(*this);
 }
 
+Object Interpreter::acceptExpression(Expression &expression) {
+    evaluate(*expression.expression);
+    return std::monostate();
+}
+
+Object Interpreter::acceptPrint(Print &print) {
+    auto value = evaluate(*print.expression);
+    if (!std::holds_alternative<std::monostate>(value)) std::cout << stringify(value) << '\n';
+    return std::monostate();
+}
+
+Object Interpreter::acceptVariable(Variable &variable) {
+    return environment.get(*variable.name);
+}
+
+Object Interpreter::acceptVar(Var &var) {
+    Object val = std::monostate();
+    if (var.initializer != nullptr) val = evaluate(*var.initializer);
+    environment.define(var.name->lexeme, val);
+    return std::monostate();
+}
+
 auto Interpreter::is_truth(Object &object) -> bool {
-    // monostate can represent null
+    // monostate can represent null/void
     if (std::holds_alternative<std::monostate>(object)) return false;
     if (std::holds_alternative<bool>(object)) return std::get<bool>(object);
     return true;
@@ -115,12 +145,12 @@ auto Interpreter::is_equal(Object &a, Object &b) -> bool {
 }
 
 auto Interpreter::stringify(Object object) -> std::string {
-    if (std::holds_alternative<std::monostate>(object)) return "nil";
+    if (std::holds_alternative<std::monostate>(object)) return "";
     if (std::holds_alternative<double>(object)) {
         auto text = std::to_string(extract_double(object));  
         return text;
     }
-    return use_me.resolve_to_string(object); 
+    return AST_Printer::resolve_to_string(object); 
 }
 
 auto Interpreter::check_number_operand(Token& op, Object &operand) -> void {

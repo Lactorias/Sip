@@ -68,7 +68,7 @@ void defineType(std::ofstream &writer, const std::string &baseName,
 
     writer << '\n';
 
-    writer << "    Object visit(Visitor &visitor) override {" << '\n';
+    writer << "    Object visit (Visitor" << baseName << " &visitor) override {" << '\n';
     writer << "        return visitor.accept" << className << "(*this);" << '\n';
     writer << "    }" << '\n' << '\n';
 
@@ -112,22 +112,23 @@ void defineAST(const std::string &outputDir, const std::string &baseName,
     writer << '\n';
 
     writer << '\n';
-    writer << "class Visitor {" << '\n';
+    writer << "class Visitor" << baseName << " {" << '\n';
     writer << "public:" << '\n';
-
+// neeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeed to add const to literal! also the namespaces
     for (auto const& type : types) {
         auto type_parts = split(type, ":");
         auto class_name = type_parts[0];
         class_name.erase(0, class_name.find_first_not_of(" \t"));
         class_name.erase(class_name.find_last_not_of(" \t") + 1);
-        writer <<  "    virtual Object accept" << class_name << "(" << class_name << " &" << to_lower_str(class_name) << ") = 0;" << '\n' << '\n';
+        if (class_name == "Literal") writer <<  "    virtual Object accept" << class_name << "(" << "const " << class_name << " &" << to_lower_str(class_name) << ") = 0;" << '\n' << '\n'; 
+        else writer <<  "    virtual Object accept" << class_name << "(" << class_name << " &" << to_lower_str(class_name) << ") = 0;" << '\n' << '\n';
     }
     writer <<  "    virtual Object accept" << baseName << "(" << baseName << " &" << to_lower_str(baseName) << ") = 0;" << '\n' << '\n';
     writer << "};" << '\n';
 
     writer << "class " <<  baseName << " {" << '\n';
     writer << "public:" << '\n';
-    writer << "    virtual Object visit(Visitor &visitor) = 0;" << '\n';
+    writer << "    virtual Object visit(Visitor" << baseName << " &visitor) = 0;" << '\n';
     writer << "};" << '\n';
 
     for (const auto &type : types) {
@@ -161,11 +162,13 @@ auto main(int argc, char *argv[]) -> int {
                   "Grouping : unique_ptr<Expr> expression",
                   "Literal  : const Object value",
                   "Unary    : unique_ptr<Token> oper, unique_ptr<Expr> right",
+                  "Variable : unique_ptr<Token> name",
               });
     defineAST(outputDir, "Stmt", 
               std::vector<std::string>{
                  "Expression : unique_ptr<Expr> expression",
-                 "Print      : unique_ptr<Expr> expression"
+                 "Print      : unique_ptr<Expr> expression",
+                 "Var        : unique_ptr<Token> name, unique_ptr<Expr> initializer"
               });
     return 0;
 }

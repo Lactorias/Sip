@@ -22,12 +22,12 @@ void run(std::string input) {
     auto scanner = Scanner(input);
     auto tokens = scanner.scan_tokens();
     auto parser = Parser(tokens);
-    auto expression = parser.parse();
-    if (!expression) {
+    auto expression = std::vector<unique_ptr<Stmt>>{parser.parse()};
+    if (expression.empty()) {
         std::cerr << "error : expression is null";
         return;
     }
-    interpreter.interpret(*expression);
+    interpreter.interpret(std::move(expression));
 }
 /*
     run_file() is utilised when the compiler is executed with a file containing some input, this is read and passed to run(),

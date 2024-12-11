@@ -12,32 +12,35 @@ class Binary;
 class Grouping;
 class Literal;
 class Unary;
+class Variable;
 class Expr;
 
 
-class Visitor {
+class VisitorExpr {
 public:
     virtual Object acceptBinary(Binary &binary) = 0;
 
     virtual Object acceptGrouping(Grouping &grouping) = 0;
 
-    virtual Object acceptLiteral(Literal &literal) = 0;
+    virtual Object acceptLiteral(const Literal &literal) = 0;
 
     virtual Object acceptUnary(Unary &unary) = 0;
+
+    virtual Object acceptVariable(Variable &variable) = 0;
 
     virtual Object acceptExpr(Expr &expr) = 0;
 
 };
 class Expr {
 public:
-    virtual Object visit(Visitor &visitor) = 0;
+    virtual Object visit(VisitorExpr &visitor) = 0;
 };
 
 class Binary : public Expr {
 public:
     Binary(unique_ptr<Expr> left, unique_ptr<Token> oper, unique_ptr<Expr> right) : left(std::move(left)), oper(std::move(oper)), right(std::move(right)) {}
 
-    Object visit(Visitor &visitor) override {
+    Object visit (VisitorExpr &visitor) override {
         return visitor.acceptBinary(*this);
     }
 
@@ -50,7 +53,7 @@ class Grouping : public Expr {
 public:
     Grouping(unique_ptr<Expr> expression) : expression(std::move(expression)) {}
 
-    Object visit(Visitor &visitor) override {
+    Object visit (VisitorExpr &visitor) override {
         return visitor.acceptGrouping(*this);
     }
 
@@ -61,7 +64,7 @@ class Literal : public Expr {
 public:
     Literal(const Object value) : value(std::move(value)) {}
 
-    Object visit(Visitor &visitor) override {
+    Object visit (VisitorExpr &visitor) override {
         return visitor.acceptLiteral(*this);
     }
 
@@ -72,12 +75,23 @@ class Unary : public Expr {
 public:
     Unary(unique_ptr<Token> oper, unique_ptr<Expr> right) : oper(std::move(oper)), right(std::move(right)) {}
 
-    Object visit(Visitor &visitor) override {
+    Object visit (VisitorExpr &visitor) override {
         return visitor.acceptUnary(*this);
     }
 
     unique_ptr<Token> oper;
     unique_ptr<Expr> right;
+};
+
+class Variable : public Expr {
+public:
+    Variable(unique_ptr<Token> name) : name(std::move(name)) {}
+
+    Object visit (VisitorExpr &visitor) override {
+        return visitor.acceptVariable(*this);
+    }
+
+    unique_ptr<Token> name;
 };
 
 
