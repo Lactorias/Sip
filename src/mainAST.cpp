@@ -93,11 +93,13 @@ void defineAST(const std::string &outputDir, const std::string &baseName,
     writer << "#include <Token.hpp>" << std::endl;
     writer << "#include <Expr.hpp>" << '\n';
     writer << "#include <variant>" << std::endl;
+    writer << "#include <vector>" << '\n';
     writer << "#include <memory>" << '\n';
     writer << "#include <utility>" << '\n';
     writer << "using Object = std::variant<std::monostate, int, std::string, double, bool>;"
            << std::endl;
     writer << "using std::unique_ptr;" << '\n';
+    writer << "using std::vector;" << '\n';
 
     writer << std::endl;
 
@@ -157,6 +159,7 @@ auto main(int argc, char *argv[]) -> int {
     auto outputDir = argv[1]; // Argument for output directory
     defineAST(outputDir, "Expr",
               std::vector<std::string>{
+                  "Assign   : unique_ptr<Token> name, unique_ptr<Expr> value", 
                   "Binary   : unique_ptr<Expr> left, unique_ptr<Token> oper, "
                   "unique_ptr<Expr> right",
                   "Grouping : unique_ptr<Expr> expression",
@@ -166,6 +169,7 @@ auto main(int argc, char *argv[]) -> int {
               });
     defineAST(outputDir, "Stmt", 
               std::vector<std::string>{
+                 "Block      : vector<unique_ptr<Stmt>> statements",
                  "Expression : unique_ptr<Expr> expression",
                  "Print      : unique_ptr<Expr> expression",
                  "Var        : unique_ptr<Token> name, unique_ptr<Expr> initializer"

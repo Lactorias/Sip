@@ -17,6 +17,8 @@ Object AST_Printer::acceptExpr(Expr &expr) {
     return expr.visit(*this); 
 }
 
+Object AST_Printer::acceptAssign(Assign &assign) { return std::monostate(); }
+
 Object AST_Printer::acceptVariable(Variable &variable) { return variable.name->lexeme; }; 
 
 Object AST_Printer::acceptBinary(Binary &binary) {

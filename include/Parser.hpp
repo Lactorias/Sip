@@ -16,6 +16,10 @@ public:
 private:
     auto statement() -> unique_ptr<Stmt>;
 
+    auto assignment() -> unique_ptr<Expr>;
+
+    auto block() -> std::vector<unique_ptr<Stmt>>;
+
     auto declaration() -> unique_ptr<Stmt>;
 
     auto var_declaration() -> unique_ptr<Stmt>;

@@ -34,7 +34,21 @@
     go anywhere.
 */
 inline auto Parser::expression() -> unique_ptr<Expr> {
-    return equality(); 
+    return assignment(); 
+}
+
+auto Parser::assignment() -> unique_ptr<Expr> {
+    auto expr = equality();
+    if (match(Token::TokenType::EQUAL)) {
+        auto equals = previous();
+        auto value = assignment();
+        if (auto var_expr = dynamic_cast<Variable*>(expr.get())) {
+            auto name = std::move(*var_expr).name;
+            return std::make_unique<Assign>(std::move(name), std::move(value));
+        }
+        error(*equals, "Invalid assignment target.");
+    }
+    return expr;
 }
 
 /*
@@ -66,7 +80,17 @@ auto Parser::var_declaration() -> unique_ptr<Stmt> {
 
 auto Parser::statement() -> unique_ptr<Stmt> {
     if (match(Token::TokenType::PRINT)) return print_statement();
+    if (match(Token::TokenType::LEFT_BRACE)) return std::make_unique<Block>(block());
     return expression_statement();
+}
+
+auto Parser::block() -> vector<unique_ptr<Stmt>> {
+    auto statements = vector<unique_ptr<Stmt>>(); 
+    while (!check(Token::TokenType::RIGHT_BRACE) && !at_end()) {
+        statements.push_back(std::move(declaration()));
+    }
+    consume(Token::TokenType::RIGHT_BRACE, "Expect '}' after block.");
+    return statements;
 }
 
 auto Parser::print_statement() -> unique_ptr<Stmt> {
