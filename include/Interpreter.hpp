@@ -16,6 +16,10 @@ public:
 
     auto interpret(std::vector<unique_ptr<Stmt>> statements) -> void;
 
+    virtual Object acceptBlock(Block &block) override; 
+
+    virtual Object acceptAssign(Assign &assign) override;
+
     virtual Object acceptVariable(Variable &variable) override;
 
     virtual Object acceptVar(Var &var) override;
@@ -48,6 +52,8 @@ private:
     auto extract_double(const Object& object) -> double;
 
     auto stringify(Object object) -> std::string;
+
+    auto execute_block(std::vector<std::unique_ptr<Stmt>>& statements, std::shared_ptr<Environment> environment) -> void;
 
     auto check_number_operand(Token& op, Object &operand) -> void;
 

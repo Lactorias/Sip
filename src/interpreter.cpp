@@ -23,7 +23,33 @@ auto Interpreter::execute(Stmt &stmt) -> void {
     stmt.visit(*this);
 }
 
-Object Interpreter::acceptStmt(Stmt &stmt) { return std::monostate(); }
+Object Interpreter::acceptStmt(Stmt &stmt) { return 3; }
+
+Object Interpreter::acceptBlock(Block &block) {
+    execute_block(block.statements, std::make_shared<Environment>(environment));
+    return std::monostate();
+}
+
+auto Interpreter::execute_block(std::vector<unique_ptr<Stmt>>& statements, std::shared_ptr<Environment> environment) -> void {
+    auto prev = this->environment;
+    this->environment = environment;
+    try {
+        for (auto &statement : statements) {
+            execute(*statement);
+        }
+    } catch (...) {
+        this->environment = prev;
+        throw;
+    }
+    this->environment = prev; 
+}
+
+
+Object Interpreter::acceptAssign(Assign &assign) {
+    auto value = evaluate(*assign.value);
+    environment.assign(*assign.name, value);
+    return value;
+}
 
 
 Object Interpreter::acceptBinary(Binary &binary) {

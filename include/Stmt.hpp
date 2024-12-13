@@ -7,7 +7,9 @@
 #include <utility>
 using Object = std::variant<std::monostate, int, std::string, double, bool>;
 using std::unique_ptr;
+using std::vector;
 
+class Block;
 class Expression;
 class Print;
 class Var;
@@ -16,6 +18,8 @@ class Stmt;
 
 class VisitorStmt {
 public:
+    virtual Object acceptBlock(Block &block) = 0;
+
     virtual Object acceptExpression(Expression &expression) = 0;
 
     virtual Object acceptPrint(Print &print) = 0;
@@ -28,6 +32,17 @@ public:
 class Stmt {
 public:
     virtual Object visit(VisitorStmt &visitor) = 0;
+};
+
+class Block : public Stmt {
+public:
+    Block(vector<unique_ptr<Stmt>> statements) : statements(std::move(statements)) {}
+
+    Object visit (VisitorStmt &visitor) override {
+        return visitor.acceptBlock(*this);
+    }
+
+    vector<unique_ptr<Stmt>> statements;
 };
 
 class Expression : public Stmt {

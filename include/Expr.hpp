@@ -2,12 +2,15 @@
 #define EXPR
 #include <Token.hpp>
 #include <Expr.hpp>
+#include <vector>
 #include <variant>
 #include <memory>
 #include <utility>
 using Object = std::variant<std::monostate, int, std::string, double, bool>;
 using std::unique_ptr;
+using std::vector;
 
+class Assign;
 class Binary;
 class Grouping;
 class Literal;
@@ -18,6 +21,8 @@ class Expr;
 
 class VisitorExpr {
 public:
+    virtual Object acceptAssign(Assign &assign) = 0;
+
     virtual Object acceptBinary(Binary &binary) = 0;
 
     virtual Object acceptGrouping(Grouping &grouping) = 0;
@@ -34,6 +39,18 @@ public:
 class Expr {
 public:
     virtual Object visit(VisitorExpr &visitor) = 0;
+};
+
+class Assign : public Expr {
+public:
+    Assign(unique_ptr<Token> name, unique_ptr<Expr> value) : name(std::move(name)), value(std::move(value)) {}
+
+    Object visit (VisitorExpr &visitor) override {
+        return visitor.acceptAssign(*this);
+    }
+
+    unique_ptr<Token> name;
+    unique_ptr<Expr> value;
 };
 
 class Binary : public Expr {

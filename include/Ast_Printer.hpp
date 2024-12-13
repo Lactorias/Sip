@@ -24,6 +24,8 @@ public:
 
     virtual Object acceptExpr(Expr &expr) override;
 
+    virtual Object acceptAssign(Assign &assign) override;
+
     virtual Object acceptVariable(Variable &variable) override;
 
     virtual Object acceptBinary(Binary &binary) override;
