@@ -22,9 +22,19 @@ private:
 
     auto declaration() -> unique_ptr<Stmt>;
 
+    auto _or() -> unique_ptr<Expr>;
+
+    auto _and() -> unique_ptr<Expr>;
+
+    auto while_statement() -> unique_ptr<Stmt>;
+
+    auto for_statement() -> unique_ptr<Stmt>;
+
     auto var_declaration() -> unique_ptr<Stmt>;
 
     auto print_statement() -> unique_ptr<Stmt>;
+
+    auto if_statement() -> unique_ptr<Stmt>;
 
     auto expression_statement() -> unique_ptr<Stmt>;
 

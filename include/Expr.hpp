@@ -2,8 +2,8 @@
 #define EXPR
 #include <Token.hpp>
 #include <Expr.hpp>
-#include <vector>
 #include <variant>
+#include <vector>
 #include <memory>
 #include <utility>
 using Object = std::variant<std::monostate, int, std::string, double, bool>;
@@ -14,6 +14,7 @@ class Assign;
 class Binary;
 class Grouping;
 class Literal;
+class Logical;
 class Unary;
 class Variable;
 class Expr;
@@ -28,6 +29,8 @@ public:
     virtual Object acceptGrouping(Grouping &grouping) = 0;
 
     virtual Object acceptLiteral(const Literal &literal) = 0;
+
+    virtual Object acceptLogical(Logical &logical) = 0;
 
     virtual Object acceptUnary(Unary &unary) = 0;
 
@@ -86,6 +89,19 @@ public:
     }
 
     const Object value;
+};
+
+class Logical : public Expr {
+public:
+    Logical(unique_ptr<Expr> left, unique_ptr<Token> oper, unique_ptr<Expr> right) : left(std::move(left)), oper(std::move(oper)), right(std::move(right)) {}
+
+    Object visit (VisitorExpr &visitor) override {
+        return visitor.acceptLogical(*this);
+    }
+
+    unique_ptr<Expr> left;
+    unique_ptr<Token> oper;
+    unique_ptr<Expr> right;
 };
 
 class Unary : public Expr {

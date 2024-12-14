@@ -30,6 +30,32 @@ Object Interpreter::acceptBlock(Block &block) {
     return std::monostate();
 }
 
+Object Interpreter::accept_If(_If &_if) {
+    if (is_truth(evaluate(*_if.condition))) {
+        execute(*_if.then_branch);
+    } else if (_if.else_branch != nullptr) {
+        execute(*_if.else_branch);
+    }
+    return std::monostate();
+}
+
+Object Interpreter::accept_While(_While &_while) {
+    while (is_truth(evaluate(*_while.condition))) {
+        execute(*_while.body);
+    }
+    return std::monostate();
+}
+
+Object Interpreter::acceptLogical(Logical &logical) {
+    auto left = evaluate(*logical.left);
+    if (logical.oper->ty == Token::TokenType::OR) {
+        if (is_truth(left)) return left;
+    } else {
+        if (!is_truth(left)) return left;
+    }
+    return evaluate(*logical.right);
+}
+
 auto Interpreter::execute_block(std::vector<unique_ptr<Stmt>>& statements, std::shared_ptr<Environment> environment) -> void {
     auto prev = this->environment;
     this->environment = environment;
@@ -157,7 +183,7 @@ Object Interpreter::acceptVar(Var &var) {
     return std::monostate();
 }
 
-auto Interpreter::is_truth(Object &object) -> bool {
+auto Interpreter::is_truth(const Object &object) -> bool {
     // monostate can represent null/void
     if (std::holds_alternative<std::monostate>(object)) return false;
     if (std::holds_alternative<bool>(object)) return std::get<bool>(object);

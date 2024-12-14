@@ -16,6 +16,12 @@ public:
 
     auto interpret(std::vector<unique_ptr<Stmt>> statements) -> void;
 
+    virtual Object accept_While(_While &_while) override;
+
+    virtual Object accept_If(_If &_if) override;
+
+    virtual Object acceptLogical(Logical &logical) override;
+
     virtual Object acceptBlock(Block &block) override; 
 
     virtual Object acceptAssign(Assign &assign) override;
@@ -45,7 +51,7 @@ private:
 
     auto execute(Stmt &stmt) -> void;
 
-    auto is_truth(Object &object) -> bool;
+    auto is_truth(const Object &object) -> bool;
 
     auto is_equal(Object &a, Object &b) -> bool;
 

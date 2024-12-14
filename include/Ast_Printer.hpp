@@ -30,6 +30,8 @@ public:
 
     virtual Object acceptBinary(Binary &binary) override;
 
+    virtual Object acceptLogical(Logical &logical) override;
+
     virtual Object acceptGrouping(Grouping &grouping) override;
 
     virtual Object acceptLiteral(const Literal &literal) override;
