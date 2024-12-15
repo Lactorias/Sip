@@ -14,7 +14,13 @@
 class Interpreter : public VisitorExpr, public VisitorStmt {
 public:
 
-    auto interpret(std::vector<unique_ptr<Stmt>> statements) -> void;
+    auto interpret(std::vector<std::shared_ptr<Stmt>> statements) -> void;
+
+    virtual Object accept_While(_While &_while) override;
+
+    virtual Object accept_If(_If &_if) override;
+
+    virtual Object acceptLogical(Logical &logical) override;
 
     virtual Object acceptBlock(Block &block) override; 
 
@@ -43,9 +49,9 @@ public:
 private:
     auto evaluate(Expr &expr) -> Object;
 
-    auto execute(Stmt &stmt) -> void;
+    auto execute(std::shared_ptr<Stmt> stmt) -> void;
 
-    auto is_truth(Object &object) -> bool;
+    auto is_truth(const Object &object) -> bool;
 
     auto is_equal(Object &a, Object &b) -> bool;
 
@@ -53,14 +59,14 @@ private:
 
     auto stringify(Object object) -> std::string;
 
-    auto execute_block(std::vector<std::unique_ptr<Stmt>>& statements, std::shared_ptr<Environment> environment) -> void;
+    auto execute_block(std::vector<std::shared_ptr<Stmt>>& statements, std::shared_ptr<Environment> environment) -> void;
 
     auto check_number_operand(Token& op, Object &operand) -> void;
 
     auto check_number_operand(Token& op, Object& left, Object& right) -> void;
 
 private:
-    Environment environment;
+    std::shared_ptr<Environment> environment = std::make_shared<Environment>();
 };
 
 #endif // INTERPRETER

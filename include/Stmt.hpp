@@ -3,12 +3,15 @@
 #include <Token.hpp>
 #include <Expr.hpp>
 #include <variant>
+#include <vector>
 #include <memory>
 #include <utility>
 using Object = std::variant<std::monostate, int, std::string, double, bool>;
 using std::unique_ptr;
 using std::vector;
 
+class _If;
+class _While;
 class Block;
 class Expression;
 class Print;
@@ -18,6 +21,10 @@ class Stmt;
 
 class VisitorStmt {
 public:
+    virtual Object accept_If(_If &_if) = 0;
+
+    virtual Object accept_While(_While &_while) = 0;
+
     virtual Object acceptBlock(Block &block) = 0;
 
     virtual Object acceptExpression(Expression &expression) = 0;
@@ -34,15 +41,40 @@ public:
     virtual Object visit(VisitorStmt &visitor) = 0;
 };
 
+class _If : public Stmt {
+public:
+    _If(std::shared_ptr<Expr> condition, std::shared_ptr<Stmt> then_branch, std::shared_ptr<Stmt> else_branch) : condition(std::move(condition)), then_branch(std::move(then_branch)), else_branch(std::move(else_branch)) {}
+
+    Object visit (VisitorStmt &visitor) override {
+        return visitor.accept_If(*this);
+    }
+
+    std::shared_ptr<Expr> condition;
+    std::shared_ptr<Stmt> then_branch;
+    std::shared_ptr<Stmt> else_branch;
+};
+
+class _While : public Stmt {
+public:
+    _While(std::shared_ptr<Expr> condition, std::shared_ptr<Stmt> body) : condition(std::move(condition)), body(std::move(body)) {}
+
+    Object visit (VisitorStmt &visitor) override {
+        return visitor.accept_While(*this);
+    }
+
+    std::shared_ptr<Expr> condition;
+    std::shared_ptr<Stmt> body;
+};
+
 class Block : public Stmt {
 public:
-    Block(vector<unique_ptr<Stmt>> statements) : statements(std::move(statements)) {}
+    Block(vector<std::shared_ptr<Stmt>> statements) : statements(std::move(statements)) {}
 
     Object visit (VisitorStmt &visitor) override {
         return visitor.acceptBlock(*this);
     }
 
-    vector<unique_ptr<Stmt>> statements;
+    vector<std::shared_ptr<Stmt>> statements;
 };
 
 class Expression : public Stmt {

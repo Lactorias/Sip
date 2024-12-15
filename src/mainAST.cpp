@@ -164,11 +164,14 @@ auto main(int argc, char *argv[]) -> int {
                   "unique_ptr<Expr> right",
                   "Grouping : unique_ptr<Expr> expression",
                   "Literal  : const Object value",
+                  "Logical  : unique_ptr<Expr> left, unique_ptr<Token> oper, unique_ptr<Expr> right",
                   "Unary    : unique_ptr<Token> oper, unique_ptr<Expr> right",
                   "Variable : unique_ptr<Token> name",
               });
     defineAST(outputDir, "Stmt", 
               std::vector<std::string>{
+                 "_If        : unique_ptr<Expr> condition, unique_ptr<Stmt> then_branch, unique_ptr<Stmt> else_branch",
+                 "_While     : unique_ptr<Expr> condition, unique_ptr<Stmt> body",  
                  "Block      : vector<unique_ptr<Stmt>> statements",
                  "Expression : unique_ptr<Expr> expression",
                  "Print      : unique_ptr<Expr> expression",
