@@ -11,16 +11,16 @@ class Parser {
 public:
     Parser(std::vector<Token> tokens) : tokens(tokens) { std::make_unique<ErrLog>(sip_logger); } 
     
-    auto parse() -> std::vector<unique_ptr<Stmt>>;
+    auto parse() -> std::vector<std::shared_ptr<Stmt>>;
 
 private:
-    auto statement() -> unique_ptr<Stmt>;
+    auto statement() -> std::shared_ptr<Stmt>;
 
     auto assignment() -> unique_ptr<Expr>;
 
-    auto block() -> std::vector<unique_ptr<Stmt>>;
+    auto block() -> std::vector<std::shared_ptr<Stmt>>;
 
-    auto declaration() -> unique_ptr<Stmt>;
+    auto declaration() -> std::shared_ptr<Stmt>;
 
     auto _or() -> unique_ptr<Expr>;
 
@@ -28,13 +28,13 @@ private:
 
     auto while_statement() -> unique_ptr<Stmt>;
 
-    auto for_statement() -> unique_ptr<Stmt>;
+    auto for_statement() -> std::shared_ptr<Stmt>;
 
     auto var_declaration() -> unique_ptr<Stmt>;
 
     auto print_statement() -> unique_ptr<Stmt>;
 
-    auto if_statement() -> unique_ptr<Stmt>;
+    auto if_statement() -> std::shared_ptr<Stmt>;
 
     auto expression_statement() -> unique_ptr<Stmt>;
 

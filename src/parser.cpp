@@ -74,13 +74,13 @@ auto Parser::_and() -> unique_ptr<Expr> {
 /*
     parse(), kicks off our parsing, starting at the 'lowest' level "expression".    
 */
-auto Parser::parse() -> std::vector<unique_ptr<Stmt>> {
-    auto statements = std::vector<unique_ptr<Stmt>>();
+auto Parser::parse() -> std::vector<std::shared_ptr<Stmt>> {
+    auto statements = std::vector<std::shared_ptr<Stmt>>();
     while (!at_end()) statements.push_back(declaration());
     return statements;
 }
 
-auto Parser::declaration() -> unique_ptr<Stmt> {
+auto Parser::declaration() -> std::shared_ptr<Stmt> {
     try {
         if (match(Token::TokenType::VAR)) return var_declaration();
         return statement();
@@ -98,52 +98,54 @@ auto Parser::var_declaration() -> unique_ptr<Stmt> {
     return std::make_unique<Var>(std::move(name), std::move(initializer));
 }
 
-auto Parser::statement() -> unique_ptr<Stmt> {
-    if (match(Token::TokenType::FOR)) return for_statement();
+auto Parser::statement() -> std::shared_ptr<Stmt> {
+    //if (match(Token::TokenType::FOR)) return for_statement();
     if (match(Token::TokenType::IF)) return if_statement();
     if (match(Token::TokenType::PRINT)) return print_statement();
     if (match(Token::TokenType::WHILE)) return while_statement();
-    if (match(Token::TokenType::LEFT_BRACE)) return std::make_unique<Block>(block());
+    if (match(Token::TokenType::LEFT_BRACE)) return std::make_shared<Block>(block());
     return expression_statement();
 }
 
-auto Parser::for_statement() -> unique_ptr<Stmt> {
-    consume(Token::TokenType::LEFT_PAREN, "Expect '(' after 'for'.");
-    std::unique_ptr<Stmt> initializer;
-    if (match(Token::TokenType::SEMICOLON)) {
-        initializer = nullptr;
-    } else if (match(Token::TokenType::VAR)) {
-        initializer = std::move(var_declaration());
-    } else {
-        initializer = std::move(expression_statement());
-    }
-    unique_ptr<Expr> condition = nullptr;
-    if (!check(Token::TokenType::SEMICOLON)) {
-        condition = std::move(expression());
-    }
-    consume(Token::TokenType::SEMICOLON, "Expect ';' after loop condiiton.");
-    unique_ptr<Expr> increment;
-    if (!check(Token::TokenType::RIGHT_PAREN)) {
-        increment = std::move(expression());
-    }
-    consume(Token::TokenType::RIGHT_PAREN, "Expect ')' after for clauses.");
-    auto body = statement();
-    if (increment != nullptr) {
-        body = std::make_unique<Block>(vector<unique_ptr<Stmt>>{
-            std::move(body), std::make_unique<Expression>(std::move(increment))
-        });
-    }
-    if (condition == nullptr) condition = std::make_unique<Literal>(true);
-    body = std::make_unique<_While>(std::move(condition), std::move(body));
+// auto Parser::for_statement() -> std::shared_ptr<Stmt> {
+//     consume(Token::TokenType::LEFT_PAREN, "Expect '(' after 'for'.");
+//     std::shared_ptr<Stmt> initializer;
+//     if (match(Token::TokenType::SEMICOLON)) {
+//         initializer = nullptr;
+//     } else if (match(Token::TokenType::VAR)) {
+//         initializer = std::move(var_declaration());
+//     } else {
+//         initializer = std::move(expression_statement());
+//     }
+//     std::shared_ptr<Expr> condition = nullptr;
+//     if (!check(Token::TokenType::SEMICOLON)) {
+//         condition = std::move(expression());
+//     }
+//     consume(Token::TokenType::SEMICOLON, "Expect ';' after loop condiiton.");
+//     unique_ptr<Expr> increment;
+//     if (!check(Token::TokenType::RIGHT_PAREN)) {
+//         increment = std::move(expression());
+//     }
+//     consume(Token::TokenType::RIGHT_PAREN, "Expect ')' after for clauses.");
+//     auto body = statement();
+//     if (increment != nullptr) {
+//         auto stmts = vector<unique_ptr<Stmt>>();
+//         stmts.emplace_back(std::move(body));
+//         stmts.emplace_back(std::make_shared<Expression>(increment));
+//         body = std::make_shared<Block>(std::move(stmts));
+//     }
+//     if (condition == nullptr) condition = std::make_shared<Literal>(true);
+//     body = std::make_shared<_While>(condition, body);
 
-    if (initializer != nullptr) {
-        body = std::make_unique<Block>(vector<unique_ptr<Stmt>>{
-            std::move(initializer),
-            std::move(body)
-        });
-    }
-    return body;
-}
+//     if (initializer != nullptr) {
+//         auto stmts2 = vector<std::shared_ptr<Stmt>>();
+//         auto expr = std::make_shared<Expression>(increment);
+//         stmts2.emplace_back(initializer);
+//         stmts2.emplace_back(expr);
+//         body = std::make_shared<Block>(stmts2);
+//     }
+//     return body;
+// }
 
 auto Parser::while_statement() -> unique_ptr<Stmt> {
     consume(Token::TokenType::LEFT_PAREN, "Expected '(' after \"while\"");
@@ -153,22 +155,22 @@ auto Parser::while_statement() -> unique_ptr<Stmt> {
     return std::make_unique<_While>(std::move(condition), std::move(body));
 }
 
-auto Parser::if_statement() -> unique_ptr<Stmt> {
+auto Parser::if_statement() -> std::shared_ptr<Stmt> {
     consume(Token::TokenType::LEFT_PAREN, "Expected '(' after \"if\".");
     auto condition = expression();
     consume(Token::TokenType::RIGHT_PAREN, "Expect ')' after if condition.");
     auto then_branch = statement();
-    std::unique_ptr<Stmt> else_branch;
+    std::shared_ptr<Stmt> else_branch;
     if (match(Token::TokenType::ELSE)) {
         else_branch = statement();
     }
-    return std::make_unique<_If>(std::move(condition), std::move(then_branch), std::move(else_branch));
+    return std::make_shared<_If>(std::move(condition), then_branch, else_branch);
 }
 
-auto Parser::block() -> vector<unique_ptr<Stmt>> {
-    auto statements = vector<unique_ptr<Stmt>>(); 
+auto Parser::block() -> vector<std::shared_ptr<Stmt>> {
+    auto statements = vector<std::shared_ptr<Stmt>>(); 
     while (!check(Token::TokenType::RIGHT_BRACE) && !at_end()) {
-        statements.push_back(std::move(declaration()));
+        statements.push_back(declaration());
     }
     consume(Token::TokenType::RIGHT_BRACE, "Expect '}' after block.");
     return statements;

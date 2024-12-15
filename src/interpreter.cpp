@@ -9,39 +9,39 @@
 
 Object Interpreter::acceptExpr(Expr &expr) { return nullptr; }
 
-auto Interpreter::interpret(std::vector<unique_ptr<Stmt>> statements) -> void {
+auto Interpreter::interpret(std::vector<std::shared_ptr<Stmt>> statements) -> void {
     try {
         for (auto& statement : statements) {
-            execute(*statement);
+            execute(statement);
         }
     } catch (RuntimeError error) {
         error.runtime_error(error);
     }
 }
 
-auto Interpreter::execute(Stmt &stmt) -> void {
-    stmt.visit(*this);
+auto Interpreter::execute(std::shared_ptr<Stmt> stmt) -> void {
+    if (stmt) stmt->visit(*this);
 }
 
 Object Interpreter::acceptStmt(Stmt &stmt) { return 3; }
 
 Object Interpreter::acceptBlock(Block &block) {
-    execute_block(block.statements, std::make_shared<Environment>(environment));
+    execute_block(block.statements, environment);
     return std::monostate();
 }
 
 Object Interpreter::accept_If(_If &_if) {
     if (is_truth(evaluate(*_if.condition))) {
-        execute(*_if.then_branch);
+        execute(std::move(_if.then_branch));
     } else if (_if.else_branch != nullptr) {
-        execute(*_if.else_branch);
+        execute(std::move(_if.else_branch));
     }
     return std::monostate();
 }
 
 Object Interpreter::accept_While(_While &_while) {
     while (is_truth(evaluate(*_while.condition))) {
-        execute(*_while.body);
+        execute(_while.body);
     }
     return std::monostate();
 }
@@ -56,12 +56,13 @@ Object Interpreter::acceptLogical(Logical &logical) {
     return evaluate(*logical.right);
 }
 
-auto Interpreter::execute_block(std::vector<unique_ptr<Stmt>>& statements, std::shared_ptr<Environment> environment) -> void {
+auto Interpreter::execute_block(std::vector<std::shared_ptr<Stmt>>& statements, std::shared_ptr<Environment> environment) -> void {
     auto prev = this->environment;
     this->environment = environment;
     try {
         for (auto &statement : statements) {
-            execute(*statement);
+            if (!statement) std::cout << "NULLLLLLLLLLLLLLLLLLLLLLLL" << '\n';
+            execute(statement);
         }
     } catch (...) {
         this->environment = prev;
@@ -73,7 +74,7 @@ auto Interpreter::execute_block(std::vector<unique_ptr<Stmt>>& statements, std::
 
 Object Interpreter::acceptAssign(Assign &assign) {
     auto value = evaluate(*assign.value);
-    environment.assign(*assign.name, value);
+    environment->assign(*assign.name, value);
     return value;
 }
 
@@ -173,13 +174,13 @@ Object Interpreter::acceptPrint(Print &print) {
 }
 
 Object Interpreter::acceptVariable(Variable &variable) {
-    return environment.get(*variable.name);
+    return environment->get(*variable.name);
 }
 
 Object Interpreter::acceptVar(Var &var) {
     Object val = std::monostate();
     if (var.initializer != nullptr) val = evaluate(*var.initializer);
-    environment.define(var.name->lexeme, val);
+    environment->define(var.name->lexeme, val);
     return std::monostate();
 }
 
