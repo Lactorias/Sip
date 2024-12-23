@@ -9,7 +9,7 @@
 
 class Parser {
 public:
-    Parser(std::vector<Token> tokens) : tokens(tokens) { std::make_unique<ErrLog>(sip_logger); } 
+    Parser(std::vector<Token> tokens) : tokens(tokens) { std::make_shared<ErrLog>(sip_logger); } 
     
     auto parse() -> std::vector<std::shared_ptr<Stmt>>;
 
@@ -18,47 +18,47 @@ private:
 
     auto function(std::string kind) -> std::shared_ptr<Function>;
 
-    auto call() -> unique_ptr<Expr>;
+    auto call() -> shared_ptr<Expr>;
 
-    auto finish_call(unique_ptr<Expr> callee) -> unique_ptr<Expr>; 
+    auto finish_call(shared_ptr<Expr> callee) -> shared_ptr<Expr>; 
 
-    auto assignment() -> unique_ptr<Expr>;
+    auto assignment() -> shared_ptr<Expr>;
 
     auto block() -> std::vector<std::shared_ptr<Stmt>>;
 
     auto declaration() -> std::shared_ptr<Stmt>;
 
-    auto _or() -> unique_ptr<Expr>;
+    auto _or() -> shared_ptr<Expr>;
 
-    auto _and() -> unique_ptr<Expr>;
+    auto _and() -> shared_ptr<Expr>;
 
-    auto while_statement() -> unique_ptr<Stmt>;
+    auto while_statement() -> shared_ptr<Stmt>;
 
     auto for_statement() -> std::shared_ptr<Stmt>;
 
-    auto var_declaration() -> unique_ptr<Stmt>;
+    auto var_declaration() -> shared_ptr<Stmt>;
 
-    auto print_statement() -> unique_ptr<Stmt>;
+    auto print_statement() -> shared_ptr<Stmt>;
 
     auto if_statement() -> std::shared_ptr<Stmt>;
 
-    auto expression_statement() -> unique_ptr<Stmt>;
+    auto expression_statement() -> shared_ptr<Stmt>;
 
-    inline auto expression() -> unique_ptr<Expr>;
+    inline auto expression() -> shared_ptr<Expr>;
 
-    auto equality() -> unique_ptr<Expr>;
+    auto equality() -> shared_ptr<Expr>;
 
-    auto comparison() -> unique_ptr<Expr>;
+    auto comparison() -> shared_ptr<Expr>;
 
-    auto term() -> unique_ptr<Expr>;
+    auto term() -> shared_ptr<Expr>;
 
-    auto factor() -> unique_ptr<Expr>;
+    auto factor() -> shared_ptr<Expr>;
 
-    auto unary() -> unique_ptr<Expr>;
+    auto unary() -> shared_ptr<Expr>;
 
-    auto primary() -> unique_ptr<Expr>;
+    auto primary() -> shared_ptr<Expr>;
 
-    auto consume(Token::TokenType type, std::string message) -> unique_ptr<Token>;
+    auto consume(Token::TokenType type, std::string message) -> shared_ptr<Token>;
 
     auto error(Token token, std::string message) -> ErrLog;
 
@@ -69,13 +69,13 @@ private:
 
     auto check(Token::TokenType type) noexcept -> bool;
 
-    auto advance() noexcept -> unique_ptr<Token>;
+    auto advance() noexcept -> shared_ptr<Token>;
 
     inline auto at_end() noexcept -> bool;
 
     inline auto peek() noexcept -> Token;
 
-    inline auto previous() noexcept -> unique_ptr<Token>;
+    inline auto previous() noexcept -> shared_ptr<Token>;
 
 private: 
     std::vector<Token> tokens;    

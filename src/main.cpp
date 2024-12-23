@@ -1,3 +1,4 @@
+#include <SipVariant.hpp>
 #include <Scanner.hpp>
 #include <Expr.hpp>
 #include <Parser.hpp>

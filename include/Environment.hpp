@@ -1,6 +1,7 @@
 #ifndef ENVIRONMENT
 #define ENVIRONMENT
 
+#include <SipVariant.hpp>
 #include <LoxCallable.hpp>
 #include <Expr.hpp>
 #include <unordered_map>

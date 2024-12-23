@@ -1,24 +1,16 @@
 #ifndef LOXCALLABLE
 #define LOXCALLABLE
-
+#include <SipVariant.hpp>
 #include <any>
 #include <variant>
 #include <functional>
 #include <memory>
 #include <vector>
+#include <iostream>
 
 
 class Interpreter;
 class Environment;
-class Function;
-struct Lox_Function;
-struct Func;
-
-using Lox_Callable = std::variant<std::monostate, Func, Lox_Function>;
-
-using Object = std::variant<std::monostate, int, std::string, double, bool, Lox_Callable>;
-
-
 
 /*
     Functions users make in Lox.
@@ -30,7 +22,7 @@ struct Lox_Function {
 
     auto arity() -> size_t;
 
-    auto call(Interpreter &interpreter, std::vector<Object> &arguments) -> Object;
+    auto call(Interpreter &interpreter, std::vector<std::shared_ptr<Object>> &arguments) -> Object;
 
     std::any declaration_m;
     std::shared_ptr<Environment> closure_m;
@@ -43,11 +35,11 @@ struct Lox_Function {
 
 struct Func {
 
-    Func(std::function<auto()->size_t> arity_t, std::function<auto(Interpreter &, std::vector<Object> &)->Object> call_t, std::string name_t); 
+    Func(std::function<auto()->size_t> arity_t, std::function<auto(Interpreter &, std::vector<std::shared_ptr<Object>> &)->Object> call_t, std::string name_t); 
     
     std::string name;
     std::function<auto()->size_t> arity;
-    std::function<auto(Interpreter &, std::vector<Object> &)->Object> call;
+    std::function<auto(Interpreter &, std::vector<std::shared_ptr<Object>> &)->Object> call;
 
 };
 
@@ -56,12 +48,14 @@ struct Func {
 struct Arity {
 
     auto operator()(Lox_Callable& func) -> size_t {
+        std::cout << "hey from the operator!" << '\n';
         return std::visit(*this, func);
     }; 
     auto operator()(Func& func) -> size_t {
         return func.arity();
     }
     auto operator()(Lox_Function& func) -> size_t {
+        std::cout << "yo we in Lox_Function" << '\n';
         return func.arity();
     }
     auto operator()(std::monostate) -> size_t {
@@ -86,7 +80,7 @@ struct Callee {
     }
 
     Interpreter& interpreter;
-    std::vector<Object>& args;
+    std::vector<std::shared_ptr<Object>>& args;
 
 };
 

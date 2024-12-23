@@ -1,5 +1,6 @@
 #ifndef EXPR
 #define EXPR
+#include <SipVariant.hpp>
 #include <Token.hpp>
 #include <Expr.hpp>
 #include <variant>
@@ -7,8 +8,10 @@
 #include <memory>
 #include <LoxCallable.hpp>
 #include <utility>
-using Object = std::variant<std::monostate, int, std::string, double, bool, Lox_Callable>;
-using std::unique_ptr;
+
+
+
+
 using std::shared_ptr;
 using std::vector;
 
@@ -51,32 +54,32 @@ public:
 
 class Assign : public Expr {
 public:
-    Assign(unique_ptr<Token> name, unique_ptr<Expr> value) : name(std::move(name)), value(std::move(value)) {}
+    Assign(shared_ptr<Token> name, shared_ptr<Expr> value) : name((name)), value((value)) {}
 
     Object visit (VisitorExpr &visitor) override {
         return visitor.acceptAssign(*this);
     }
 
-    unique_ptr<Token> name;
-    unique_ptr<Expr> value;
+    shared_ptr<Token> name;
+    shared_ptr<Expr> value;
 };
 
 class Binary : public Expr {
 public:
-    Binary(unique_ptr<Expr> left, unique_ptr<Token> oper, unique_ptr<Expr> right) : left(std::move(left)), oper(std::move(oper)), right(std::move(right)) {}
+    Binary(shared_ptr<Expr> left, shared_ptr<Token> oper, shared_ptr<Expr> right) : left((left)), oper((oper)), right((right)) {}
 
     Object visit (VisitorExpr &visitor) override {
         return visitor.acceptBinary(*this);
     }
 
-    unique_ptr<Expr> left;
-    unique_ptr<Token> oper;
-    unique_ptr<Expr> right;
+    shared_ptr<Expr> left;
+    shared_ptr<Token> oper;
+    shared_ptr<Expr> right;
 };
 
 class Call : public Expr {
 public:
-    Call(shared_ptr<Expr> callee, shared_ptr<Token> paren, vector<shared_ptr<Expr>> arguments) : callee(std::move(callee)), paren(std::move(paren)), arguments(std::move(arguments)) {}
+    Call(shared_ptr<Expr> callee, shared_ptr<Token> paren, vector<shared_ptr<Expr>> arguments) : callee((callee)), paren((paren)), arguments((arguments)) {}
 
     Object visit (VisitorExpr &visitor) override {
         return visitor.acceptCall(*this);
@@ -89,18 +92,18 @@ public:
 
 class Grouping : public Expr {
 public:
-    Grouping(unique_ptr<Expr> expression) : expression(std::move(expression)) {}
+    Grouping(shared_ptr<Expr> expression) : expression((expression)) {}
 
     Object visit (VisitorExpr &visitor) override {
         return visitor.acceptGrouping(*this);
     }
 
-    unique_ptr<Expr> expression;
+    shared_ptr<Expr> expression;
 };
 
 class Literal : public Expr {
 public:
-    Literal(const Object value) : value(std::move(value)) {}
+    Literal(const Object value) : value((value)) {}
 
     Object visit (VisitorExpr &visitor) override {
         return visitor.acceptLiteral(*this);
@@ -111,38 +114,38 @@ public:
 
 class Logical : public Expr {
 public:
-    Logical(unique_ptr<Expr> left, unique_ptr<Token> oper, unique_ptr<Expr> right) : left(std::move(left)), oper(std::move(oper)), right(std::move(right)) {}
+    Logical(shared_ptr<Expr> left, shared_ptr<Token> oper, shared_ptr<Expr> right) : left((left)), oper((oper)), right((right)) {}
 
     Object visit (VisitorExpr &visitor) override {
         return visitor.acceptLogical(*this);
     }
 
-    unique_ptr<Expr> left;
-    unique_ptr<Token> oper;
-    unique_ptr<Expr> right;
+    shared_ptr<Expr> left;
+    shared_ptr<Token> oper;
+    shared_ptr<Expr> right;
 };
 
 class Unary : public Expr {
 public:
-    Unary(unique_ptr<Token> oper, unique_ptr<Expr> right) : oper(std::move(oper)), right(std::move(right)) {}
+    Unary(shared_ptr<Token> oper, shared_ptr<Expr> right) : oper((oper)), right((right)) {}
 
     Object visit (VisitorExpr &visitor) override {
         return visitor.acceptUnary(*this);
     }
 
-    unique_ptr<Token> oper;
-    unique_ptr<Expr> right;
+    shared_ptr<Token> oper;
+    shared_ptr<Expr> right;
 };
 
 class Variable : public Expr {
 public:
-    Variable(unique_ptr<Token> name) : name(std::move(name)) {}
+    Variable(shared_ptr<Token> name) : name((name)) {}
 
     Object visit (VisitorExpr &visitor) override {
         return visitor.acceptVariable(*this);
     }
 
-    unique_ptr<Token> name;
+    shared_ptr<Token> name;
 };
 
 

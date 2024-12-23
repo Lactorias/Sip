@@ -1,6 +1,6 @@
 #ifndef PRINTER
 #define PRINTER
-
+#include <SipVariant.hpp>
 #include <Expr.hpp>
 
 #include <Scanner.hpp>
@@ -13,7 +13,6 @@
 #include <LoxCallable.hpp>
 #include <type_traits>
 #include <variant>
-using Object = std::variant<std::monostate, int, std::string, double, bool, Lox_Callable>;
 
 // helper type for the visitor #4
 template<class... Ts>

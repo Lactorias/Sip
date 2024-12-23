@@ -28,23 +28,33 @@ auto Interpreter::execute(std::shared_ptr<Stmt> stmt) -> void {
 }
 
 Object Interpreter::acceptCall(Call &call) {
+    std::cout << "calllllllllllllllllilng!" << '\n';
+    std::cout << '\n' << '\n' << '\n';
     auto callee = evaluate(*call.callee);
-    vector<Object> arguments;
-    for (auto& argument : call.arguments) {
-        arguments.push_back(evaluate(*argument));
+    vector<shared_ptr<Object>> arguments;
+    std::cout << "handle call arguments..." << '\n';
+    for (auto argument : call.arguments) {
+        arguments.push_back(std::make_shared<Object>(evaluate(*argument)));
     }
     auto obj = callee;
+    std::cout << "are you a callable?..." << '\n';
     if (!std::holds_alternative<Lox_Callable>(obj)) return std::monostate{};
+    std::cout << "Yes i am a callable!" << '\n';
     auto function = std::get<Lox_Callable>(obj);
-    if (arguments.size() != Arity{}(function)) {
+    std::cout << "Okay im in my final form." << '\n';
+    auto arity = Arity{}(function);
+    std::cout << "arity is not the problem" << '\n';
+    if (auto arity = Arity{}(function); arity != arguments.size()) {
+        std::cout << "AHHHHHHHHHH ERROR NOOOOOOO" << '\n';
         throw RuntimeError(*call.paren, "Expected " + std::to_string(std::get<Lox_Function>(function).arity()) + " arguments but got " + std::to_string(arguments.size()) + ".");
     }
+    std::cout << "the final boss.........." << '\n';
     return Callee{.interpreter = *this, .args = arguments}(function);
 }
 
 Object Interpreter::acceptFunction(Function &function) {
-    auto func = std::make_shared<Lox_Function>(function);
-    environment->define(function.name->lexeme, *func);
+    auto const func = Lox_Function{function};
+    environment->define(function.name->lexeme, func);
     return {};
 }
 
@@ -57,9 +67,9 @@ Object Interpreter::acceptBlock(Block &block) {
 
 Object Interpreter::accept_If(_If &_if) {
     if (is_truth(evaluate(*_if.condition))) {
-        execute(std::move(_if.then_branch));
+        execute((_if.then_branch));
     } else if (_if.else_branch != nullptr) {
-        execute(std::move(_if.else_branch));
+        execute((_if.else_branch));
     }
     return std::monostate();
 }
