@@ -95,10 +95,12 @@ void defineAST(const std::string &outputDir, const std::string &baseName,
     writer << "#include <variant>" << std::endl;
     writer << "#include <vector>" << '\n';
     writer << "#include <memory>" << '\n';
+    writer << "#include <LoxCallable.hpp>" << '\n';
     writer << "#include <utility>" << '\n';
-    writer << "using Object = std::variant<std::monostate, int, std::string, double, bool>;"
+    writer << "using Object = std::variant<std::monostate, int, std::string, double, bool, Clock>;"
            << std::endl;
     writer << "using std::unique_ptr;" << '\n';
+    writer << "using std::shared_ptr;" << '\n';
     writer << "using std::vector;" << '\n';
 
     writer << std::endl;
@@ -162,6 +164,7 @@ auto main(int argc, char *argv[]) -> int {
                   "Assign   : unique_ptr<Token> name, unique_ptr<Expr> value", 
                   "Binary   : unique_ptr<Expr> left, unique_ptr<Token> oper, "
                   "unique_ptr<Expr> right",
+                  "Call     : shared_ptr<Expr> callee, shared_ptr<Token> paren, vector<shared_ptr<Expr>> arguments",
                   "Grouping : unique_ptr<Expr> expression",
                   "Literal  : const Object value",
                   "Logical  : unique_ptr<Expr> left, unique_ptr<Token> oper, unique_ptr<Expr> right",
@@ -170,10 +173,11 @@ auto main(int argc, char *argv[]) -> int {
               });
     defineAST(outputDir, "Stmt", 
               std::vector<std::string>{
-                 "_If        : unique_ptr<Expr> condition, unique_ptr<Stmt> then_branch, unique_ptr<Stmt> else_branch",
-                 "_While     : unique_ptr<Expr> condition, unique_ptr<Stmt> body",  
-                 "Block      : vector<unique_ptr<Stmt>> statements",
-                 "Expression : unique_ptr<Expr> expression",
+                 "_If        : shared_ptr<Expr> condition, shared_ptr<Stmt> then_branch, shared_ptr<Stmt> else_branch",
+                 "_While     : shared_ptr<Expr> condition, shared_ptr<Stmt> body",  
+                 "Block      : vector<shared_ptr<Stmt>> statements",
+                 "Expression : shared_ptr<Expr> expression",
+                 "Function   : shared_ptr<Token> name, vector<shared_ptr<Token>> params, vector<shared_ptr<Stmt>> body",
                  "Print      : unique_ptr<Expr> expression",
                  "Var        : unique_ptr<Token> name, unique_ptr<Expr> initializer"
               });

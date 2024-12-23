@@ -5,7 +5,9 @@
 #include <Token.hpp>
 #include <Stmt.hpp>
 #include <vector>
+#include <chrono>
 #include <Environment.hpp>
+#include <LoxCallable.hpp>
 
 /*
     To interpret our language in the early stages, we will directly execute the syntax tree itself.
@@ -14,9 +16,25 @@
 class Interpreter : public VisitorExpr, public VisitorStmt {
 public:
 
+    Interpreter() {
+        globals->define("clock", Func{[]() { return 0; },
+                                      [](auto const & /* interpreter */, auto const & /* args */) {
+                                        using namespace std::chrono;
+                                        return static_cast<double>(
+                                            duration_cast<seconds>(system_clock::now().time_since_epoch())
+                                            .count());
+                                      }, "clock"}); 
+    }
+
+    auto execute_block(const std::vector<std::shared_ptr<Stmt>>& statements, std::shared_ptr<Environment> environment) -> void;
+
     auto interpret(std::vector<std::shared_ptr<Stmt>> statements) -> void;
 
     virtual Object accept_While(_While &_while) override;
+
+    virtual Object acceptFunction(Function &function) override;
+
+    virtual Object acceptCall(Call &call) override;
 
     virtual Object accept_If(_If &_if) override;
 
@@ -59,14 +77,13 @@ private:
 
     auto stringify(Object object) -> std::string;
 
-    auto execute_block(std::vector<std::shared_ptr<Stmt>>& statements, std::shared_ptr<Environment> environment) -> void;
-
     auto check_number_operand(Token& op, Object &operand) -> void;
 
     auto check_number_operand(Token& op, Object& left, Object& right) -> void;
 
-private:
-    std::shared_ptr<Environment> environment = std::make_shared<Environment>();
+public:
+    std::shared_ptr<Environment> globals = std::make_shared<Environment>();
+    std::shared_ptr<Environment> environment = globals;
 };
 
 #endif // INTERPRETER
