@@ -5,15 +5,18 @@
 #include <variant>
 #include <vector>
 #include <memory>
+#include <LoxCallable.hpp>
 #include <utility>
-using Object = std::variant<std::monostate, int, std::string, double, bool>;
+using Object = std::variant<std::monostate, int, std::string, double, bool, Lox_Callable>;
 using std::unique_ptr;
+using std::shared_ptr;
 using std::vector;
 
 class _If;
 class _While;
 class Block;
 class Expression;
+class Function;
 class Print;
 class Var;
 class Stmt;
@@ -29,6 +32,8 @@ public:
 
     virtual Object acceptExpression(Expression &expression) = 0;
 
+    virtual Object acceptFunction(Function &function) = 0;
+
     virtual Object acceptPrint(Print &print) = 0;
 
     virtual Object acceptVar(Var &var) = 0;
@@ -43,49 +48,62 @@ public:
 
 class _If : public Stmt {
 public:
-    _If(std::shared_ptr<Expr> condition, std::shared_ptr<Stmt> then_branch, std::shared_ptr<Stmt> else_branch) : condition(std::move(condition)), then_branch(std::move(then_branch)), else_branch(std::move(else_branch)) {}
+    _If(shared_ptr<Expr> condition, shared_ptr<Stmt> then_branch, shared_ptr<Stmt> else_branch) : condition(std::move(condition)), then_branch(std::move(then_branch)), else_branch(std::move(else_branch)) {}
 
     Object visit (VisitorStmt &visitor) override {
         return visitor.accept_If(*this);
     }
 
-    std::shared_ptr<Expr> condition;
-    std::shared_ptr<Stmt> then_branch;
-    std::shared_ptr<Stmt> else_branch;
+    shared_ptr<Expr> condition;
+    shared_ptr<Stmt> then_branch;
+    shared_ptr<Stmt> else_branch;
 };
 
 class _While : public Stmt {
 public:
-    _While(std::shared_ptr<Expr> condition, std::shared_ptr<Stmt> body) : condition(std::move(condition)), body(std::move(body)) {}
+    _While(shared_ptr<Expr> condition, shared_ptr<Stmt> body) : condition(std::move(condition)), body(std::move(body)) {}
 
     Object visit (VisitorStmt &visitor) override {
         return visitor.accept_While(*this);
     }
 
-    std::shared_ptr<Expr> condition;
-    std::shared_ptr<Stmt> body;
+    shared_ptr<Expr> condition;
+    shared_ptr<Stmt> body;
 };
 
 class Block : public Stmt {
 public:
-    Block(vector<std::shared_ptr<Stmt>> statements) : statements(std::move(statements)) {}
+    Block(vector<shared_ptr<Stmt>> statements) : statements(std::move(statements)) {}
 
     Object visit (VisitorStmt &visitor) override {
         return visitor.acceptBlock(*this);
     }
 
-    vector<std::shared_ptr<Stmt>> statements;
+    vector<shared_ptr<Stmt>> statements;
 };
 
 class Expression : public Stmt {
 public:
-    Expression(unique_ptr<Expr> expression) : expression(std::move(expression)) {}
+    Expression(shared_ptr<Expr> expression) : expression(std::move(expression)) {}
 
     Object visit (VisitorStmt &visitor) override {
         return visitor.acceptExpression(*this);
     }
 
-    unique_ptr<Expr> expression;
+    shared_ptr<Expr> expression;
+};
+
+class Function : public Stmt {
+public:
+    Function(shared_ptr<Token> name, vector<shared_ptr<Token>> params, vector<shared_ptr<Stmt>> body) : name(std::move(name)), params(std::move(params)), body(std::move(body)) {}
+
+    Object visit (VisitorStmt &visitor) override {
+        return visitor.acceptFunction(*this);
+    }
+
+    shared_ptr<Token> name;
+    vector<shared_ptr<Token>> params;
+    vector<shared_ptr<Stmt>> body;
 };
 
 class Print : public Stmt {

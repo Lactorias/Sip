@@ -10,9 +10,10 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <LoxCallable.hpp>
 #include <type_traits>
 #include <variant>
-using Object = std::variant<std::monostate, int, std::string, double, bool>;
+using Object = std::variant<std::monostate, int, std::string, double, bool, Lox_Callable>;
 
 // helper type for the visitor #4
 template<class... Ts>
@@ -23,6 +24,8 @@ class AST_Printer : public VisitorExpr {
 public:
 
     virtual Object acceptExpr(Expr &expr) override;
+
+    virtual Object acceptCall(Call &call) override;
 
     virtual Object acceptAssign(Assign &assign) override;
 

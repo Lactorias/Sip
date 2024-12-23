@@ -3,11 +3,13 @@
 #include <variant>
 #include <iostream>
 #include <Ast_Printer.hpp>
+#include <LoxCallable.hpp>
+#include <memory>
 #include <Expr.hpp>
 #include <Stmt.hpp>
 #include <RuntimeError.hpp>
 
-Object Interpreter::acceptExpr(Expr &expr) { return nullptr; }
+Object Interpreter::acceptExpr(Expr &expr) { return std::monostate(); }
 
 auto Interpreter::interpret(std::vector<std::shared_ptr<Stmt>> statements) -> void {
     try {
@@ -21,6 +23,29 @@ auto Interpreter::interpret(std::vector<std::shared_ptr<Stmt>> statements) -> vo
 
 auto Interpreter::execute(std::shared_ptr<Stmt> stmt) -> void {
     if (stmt) stmt->visit(*this);
+    //stmt->visit(*this);
+    else std::cout << "nah" << '\n';
+}
+
+Object Interpreter::acceptCall(Call &call) {
+    auto callee = evaluate(*call.callee);
+    vector<Object> arguments;
+    for (auto& argument : call.arguments) {
+        arguments.push_back(evaluate(*argument));
+    }
+    auto obj = callee;
+    if (!std::holds_alternative<Lox_Callable>(obj)) return std::monostate{};
+    auto function = std::get<Lox_Callable>(obj);
+    if (arguments.size() != Arity{}(function)) {
+        throw RuntimeError(*call.paren, "Expected " + std::to_string(std::get<Lox_Function>(function).arity()) + " arguments but got " + std::to_string(arguments.size()) + ".");
+    }
+    return Callee{.interpreter = *this, .args = arguments}(function);
+}
+
+Object Interpreter::acceptFunction(Function &function) {
+    auto func = std::make_shared<Lox_Function>(function);
+    environment->define(function.name->lexeme, *func);
+    return {};
 }
 
 Object Interpreter::acceptStmt(Stmt &stmt) { return 3; }
@@ -56,7 +81,7 @@ Object Interpreter::acceptLogical(Logical &logical) {
     return evaluate(*logical.right);
 }
 
-auto Interpreter::execute_block(std::vector<std::shared_ptr<Stmt>>& statements, std::shared_ptr<Environment> environment) -> void {
+auto Interpreter::execute_block(const std::vector<std::shared_ptr<Stmt>>& statements, std::shared_ptr<Environment> environment) -> void {
     auto prev = this->environment;
     this->environment = environment;
     try {
@@ -112,7 +137,7 @@ Object Interpreter::acceptBinary(Binary &binary) {
         case Token::TokenType::EQUAL:
             return is_equal(left, right);
     }
-    return nullptr;
+    return std::monostate();
 }
 
 Object Interpreter::acceptGrouping(Grouping &grouping) {
@@ -155,7 +180,7 @@ Object Interpreter::acceptUnary(Unary &unary) {
             return -(extract_double(right));
     }
     // unreachable
-    return nullptr;
+    return std::monostate();
 }
 
 auto Interpreter::evaluate(Expr &expr) -> Object {
@@ -192,9 +217,12 @@ auto Interpreter::is_truth(const Object &object) -> bool {
 }
 
 auto Interpreter::is_equal(Object &a, Object &b) -> bool {
+    if (std::holds_alternative<double>(a) && std::holds_alternative<double>(b)) return std::get<double>(a) == std::get<double>(b);
+    if (std::holds_alternative<std::string>(a) && std::holds_alternative<std::string>(b)) return std::get<std::string>(a) == std::get<std::string>(b);
+    if (std::holds_alternative<bool>(a) && std::holds_alternative<bool>(b)) return std::get<bool>(a) == std::get<bool>(b);
+    // come back to this one
     if (std::holds_alternative<std::monostate>(a) && std::holds_alternative<std::monostate>(b)) return true;
-    if (std::holds_alternative<std::monostate>(a)) return false;
-    return a == b;
+    return false;
 }
 
 auto Interpreter::stringify(Object object) -> std::string {

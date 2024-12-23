@@ -5,13 +5,16 @@
 #include <variant>
 #include <vector>
 #include <memory>
+#include <LoxCallable.hpp>
 #include <utility>
-using Object = std::variant<std::monostate, int, std::string, double, bool>;
+using Object = std::variant<std::monostate, int, std::string, double, bool, Lox_Callable>;
 using std::unique_ptr;
+using std::shared_ptr;
 using std::vector;
 
 class Assign;
 class Binary;
+class Call;
 class Grouping;
 class Literal;
 class Logical;
@@ -25,6 +28,8 @@ public:
     virtual Object acceptAssign(Assign &assign) = 0;
 
     virtual Object acceptBinary(Binary &binary) = 0;
+
+    virtual Object acceptCall(Call &call) = 0;
 
     virtual Object acceptGrouping(Grouping &grouping) = 0;
 
@@ -67,6 +72,19 @@ public:
     unique_ptr<Expr> left;
     unique_ptr<Token> oper;
     unique_ptr<Expr> right;
+};
+
+class Call : public Expr {
+public:
+    Call(shared_ptr<Expr> callee, shared_ptr<Token> paren, vector<shared_ptr<Expr>> arguments) : callee(std::move(callee)), paren(std::move(paren)), arguments(std::move(arguments)) {}
+
+    Object visit (VisitorExpr &visitor) override {
+        return visitor.acceptCall(*this);
+    }
+
+    shared_ptr<Expr> callee;
+    shared_ptr<Token> paren;
+    vector<shared_ptr<Expr>> arguments;
 };
 
 class Grouping : public Expr {

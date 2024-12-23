@@ -4,6 +4,7 @@
 #include <string>
 #include <strstream>
 #include <variant>
+#include <LoxCallable.hpp>
 
 /*
     Our Token struct, forms the building blocks of our language, they are sections of source code
@@ -20,7 +21,7 @@ struct Token {
     enum class TokenType;
 
 public:
-    using LiteralValue = std::variant<std::monostate, int, std::string, double, bool>;
+    using LiteralValue = std::variant<std::monostate, int, std::string, double, bool, Lox_Callable>;
 
     Token(TokenType ty, std::string lexeme, LiteralValue literal, size_t line) 
         : ty(ty), lexeme(lexeme), literal(literal), line(line) {}

@@ -71,6 +71,24 @@ auto Parser::_and() -> unique_ptr<Expr> {
     return expr;
 }
 
+auto Parser::function(std::string kind) -> shared_ptr<Function> {
+    auto name = consume(Token::TokenType::IDENTIFIER, "Expect " + kind + " name.");
+    auto parameters = vector<shared_ptr<Token>>();
+    if (!check(Token::TokenType::RIGHT_PAREN)) {
+        do {
+            if (parameters.size() >= 255) {
+                error(peek(), "Can't have more than 255 parameters.");
+            }
+            parameters.push_back(std::make_shared<Token>(*consume(Token::TokenType::IDENTIFIER, "Expect parameter name.")));
+        } while (match(Token::TokenType::COMMA));
+    }
+    consume(Token::TokenType::RIGHT_PAREN, "Expect ')' after parameters.");
+    consume(Token::TokenType::LEFT_BRACE, "Expect '{' before " + kind + " body.");
+    auto body = block();
+    // maybe make the name shared_ptr
+    return std::make_shared<Function>(std::move(name), parameters, body);
+}
+
 /*
     parse(), kicks off our parsing, starting at the 'lowest' level "expression".    
 */
@@ -82,6 +100,7 @@ auto Parser::parse() -> std::vector<std::shared_ptr<Stmt>> {
 
 auto Parser::declaration() -> std::shared_ptr<Stmt> {
     try {
+        if (match(Token::TokenType::FUN)) return function("function");
         if (match(Token::TokenType::VAR)) return var_declaration();
         return statement();
     } catch (ErrLog error) {
@@ -99,7 +118,7 @@ auto Parser::var_declaration() -> unique_ptr<Stmt> {
 }
 
 auto Parser::statement() -> std::shared_ptr<Stmt> {
-    //if (match(Token::TokenType::FOR)) return for_statement();
+    if (match(Token::TokenType::FOR)) return for_statement();
     if (match(Token::TokenType::IF)) return if_statement();
     if (match(Token::TokenType::PRINT)) return print_statement();
     if (match(Token::TokenType::WHILE)) return while_statement();
@@ -107,45 +126,48 @@ auto Parser::statement() -> std::shared_ptr<Stmt> {
     return expression_statement();
 }
 
-// auto Parser::for_statement() -> std::shared_ptr<Stmt> {
-//     consume(Token::TokenType::LEFT_PAREN, "Expect '(' after 'for'.");
-//     std::shared_ptr<Stmt> initializer;
-//     if (match(Token::TokenType::SEMICOLON)) {
-//         initializer = nullptr;
-//     } else if (match(Token::TokenType::VAR)) {
-//         initializer = std::move(var_declaration());
-//     } else {
-//         initializer = std::move(expression_statement());
-//     }
-//     std::shared_ptr<Expr> condition = nullptr;
-//     if (!check(Token::TokenType::SEMICOLON)) {
-//         condition = std::move(expression());
-//     }
-//     consume(Token::TokenType::SEMICOLON, "Expect ';' after loop condiiton.");
-//     unique_ptr<Expr> increment;
-//     if (!check(Token::TokenType::RIGHT_PAREN)) {
-//         increment = std::move(expression());
-//     }
-//     consume(Token::TokenType::RIGHT_PAREN, "Expect ')' after for clauses.");
-//     auto body = statement();
-//     if (increment != nullptr) {
-//         auto stmts = vector<unique_ptr<Stmt>>();
-//         stmts.emplace_back(std::move(body));
-//         stmts.emplace_back(std::make_shared<Expression>(increment));
-//         body = std::make_shared<Block>(std::move(stmts));
-//     }
-//     if (condition == nullptr) condition = std::make_shared<Literal>(true);
-//     body = std::make_shared<_While>(condition, body);
+auto Parser::for_statement() -> std::shared_ptr<Stmt> {
+    consume(Token::TokenType::LEFT_PAREN, "Expect '(' after 'for'.");
 
-//     if (initializer != nullptr) {
-//         auto stmts2 = vector<std::shared_ptr<Stmt>>();
-//         auto expr = std::make_shared<Expression>(increment);
-//         stmts2.emplace_back(initializer);
-//         stmts2.emplace_back(expr);
-//         body = std::make_shared<Block>(stmts2);
-//     }
-//     return body;
-// }
+    // parse initializer
+    std::shared_ptr<Stmt> initializer;
+    if (match(Token::TokenType::SEMICOLON)) {
+        initializer = nullptr;
+    } else if (match(Token::TokenType::VAR)) {
+        initializer = var_declaration();
+    } else {
+        initializer = expression_statement();
+    }
+
+    // parse condition
+    std::shared_ptr<Expr> condition = nullptr;
+    if (!check(Token::TokenType::SEMICOLON)) {
+        condition = expression();
+    }
+    consume(Token::TokenType::SEMICOLON, "Expect ';' after loop condiiton.");
+
+    std::shared_ptr<Expr> increment = nullptr;
+    if (!check(Token::TokenType::RIGHT_PAREN)) {
+        increment = expression();
+    }
+    consume(Token::TokenType::RIGHT_PAREN, "Expect ')' after for clauses.");
+
+    auto body = statement();
+    if (increment != nullptr) {
+        body = std::make_shared<Block>(vector<std::shared_ptr<Stmt>>{
+            body, std::make_shared<Expression>(increment)
+        });
+    }
+    if (condition == nullptr) condition = std::make_shared<Literal>(true);
+    body = std::make_shared<_While>(condition, body);
+
+    if (initializer != nullptr) {
+        body = std::make_shared<Block>(vector<std::shared_ptr<Stmt>>{
+            initializer, body
+        });
+    }
+    return body;
+}
 
 auto Parser::while_statement() -> unique_ptr<Stmt> {
     consume(Token::TokenType::LEFT_PAREN, "Expected '(' after \"while\"");
@@ -250,8 +272,37 @@ auto Parser::unary() -> unique_ptr<Expr> {
         auto right = unary();
         return std::make_unique<Unary>(Unary(std::move(op), std::move(right)));
     }
-    return primary();
+    return call();
 }
+
+auto Parser::call() -> unique_ptr<Expr> {
+    auto expr = primary();
+
+    while (true) {
+        if (match(Token::TokenType::LEFT_PAREN)) {
+            expr = finish_call(std::move(expr));
+        } else {
+            break;
+        }
+    }
+    return expr;
+}
+
+auto Parser::finish_call(unique_ptr<Expr> callee) -> unique_ptr<Expr> {
+    vector<shared_ptr<Expr>> arguments;
+    if (!check(Token::TokenType::RIGHT_PAREN)) {
+        do {
+            if (arguments.size() >= 255) {
+                error(peek(), "Can't have more than 255 arguments.");
+            }
+            arguments.push_back(expression());
+        } while (match(Token::TokenType::COMMA));
+    }
+    auto paren = consume(Token::TokenType::RIGHT_PAREN, "Expect ')' after arguments.");
+    return std::make_unique<Call>(std::move(callee), std::move(paren), std::move(arguments));
+}
+
+
 /*
     primary(), handles grammar rules for literals and parenthesized expressions
 */

@@ -11,6 +11,7 @@ FILES = [
     "parser"
     "interpreter"
     "runtimeerror"
+    "loxcallable"
 ]
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 #ifndef ENVIRONMENT
 #define ENVIRONMENT
 
+#include <LoxCallable.hpp>
 #include <Expr.hpp>
 #include <unordered_map>
 #include <RuntimeError.hpp>
@@ -13,7 +14,7 @@ public:
 
     Environment(std::shared_ptr<Environment> enclosing) : enclosing(enclosing) {}
 
-    auto define(std::string name, Object& value) -> void {
+    auto define(std::string name, const Object value) -> void {
         values[name] = value;
     }
 
@@ -22,7 +23,7 @@ public:
             return values[name.lexeme];
         }
         if (enclosing != nullptr) return enclosing->get(name);
-        throw RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
+        throw RuntimeError(name, "Undefined variable got '" + name.lexeme + "'.");
     } 
 
     auto assign(Token& name, Object& value) -> void {
@@ -34,7 +35,7 @@ public:
             enclosing->assign(name, value);
             return;
         }
-        throw RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
+        throw RuntimeError(name, "Undefined variable assigned '" + name.lexeme + "'.");
     }
 
 private:

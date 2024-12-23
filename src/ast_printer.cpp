@@ -17,6 +17,8 @@ Object AST_Printer::acceptExpr(Expr &expr) {
     return expr.visit(*this); 
 }
 
+Object AST_Printer::acceptCall(Call &call) { return std::monostate(); }
+
 Object AST_Printer::acceptAssign(Assign &assign) { return std::monostate(); }
 
 Object AST_Printer::acceptLogical(Logical &logical) { return std::monostate(); }

@@ -16,6 +16,12 @@ public:
 private:
     auto statement() -> std::shared_ptr<Stmt>;
 
+    auto function(std::string kind) -> std::shared_ptr<Function>;
+
+    auto call() -> unique_ptr<Expr>;
+
+    auto finish_call(unique_ptr<Expr> callee) -> unique_ptr<Expr>; 
+
     auto assignment() -> unique_ptr<Expr>;
 
     auto block() -> std::vector<std::shared_ptr<Stmt>>;
