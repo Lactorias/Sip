@@ -5,7 +5,7 @@
 Lox_Function::Lox_Function(std::any declaration)
     : declaration_m(declaration) {}
 
-auto Lox_Function::arity() -> size_t { std::any_cast<Function>(declaration_m).params.size(); }
+auto Lox_Function::arity() -> size_t { return std::any_cast<Function>(declaration_m).params.size(); }
 
 auto Lox_Function::call(Interpreter &interpreter, std::vector<Object> &arguments) -> Object { 
     auto environment = std::make_shared<Environment>(interpreter.globals);

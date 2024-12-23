@@ -73,6 +73,7 @@ auto Parser::_and() -> unique_ptr<Expr> {
 
 auto Parser::function(std::string kind) -> shared_ptr<Function> {
     auto name = consume(Token::TokenType::IDENTIFIER, "Expect " + kind + " name.");
+    consume(Token::TokenType::LEFT_PAREN, "Expect '(' after identifier.");
     auto parameters = vector<shared_ptr<Token>>();
     if (!check(Token::TokenType::RIGHT_PAREN)) {
         do {
