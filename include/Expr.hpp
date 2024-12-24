@@ -1,5 +1,6 @@
 #ifndef EXPR
 #define EXPR
+#include <SipVariant.hpp>
 #include <Token.hpp>
 #include <Expr.hpp>
 #include <variant>
@@ -7,7 +8,6 @@
 #include <memory>
 #include <LoxCallable.hpp>
 #include <utility>
-using Object = std::variant<std::monostate, int, std::string, double, bool, Lox_Callable>;
 using std::unique_ptr;
 using std::shared_ptr;
 using std::vector;

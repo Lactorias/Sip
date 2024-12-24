@@ -122,9 +122,20 @@ auto Parser::statement() -> std::shared_ptr<Stmt> {
     if (match(Token::TokenType::FOR)) return for_statement();
     if (match(Token::TokenType::IF)) return if_statement();
     if (match(Token::TokenType::PRINT)) return print_statement();
+    if (match(Token::TokenType::RETURN)) return return_statement();
     if (match(Token::TokenType::WHILE)) return while_statement();
     if (match(Token::TokenType::LEFT_BRACE)) return std::make_shared<Block>(block());
     return expression_statement();
+}
+
+auto Parser::return_statement() -> unique_ptr<Stmt>{
+    auto keyword = previous();
+    auto value = shared_ptr<Expr>{};
+    if (!check(Token::TokenType::SEMICOLON)) {
+        value = std::move(expression());
+    }
+    consume(Token::TokenType::SEMICOLON, "Expect ';' after return value.");
+    return std::make_unique<_Return>(std::move(keyword), value);
 }
 
 auto Parser::for_statement() -> std::shared_ptr<Stmt> {

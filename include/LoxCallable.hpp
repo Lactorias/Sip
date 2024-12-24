@@ -26,7 +26,7 @@ using Object = std::variant<std::monostate, int, std::string, double, bool, Lox_
 
 struct Lox_Function {
 
-    Lox_Function(std::any declaration);
+    Lox_Function(std::any declaration, std::shared_ptr<Environment> closure);
 
     auto arity() -> size_t;
 

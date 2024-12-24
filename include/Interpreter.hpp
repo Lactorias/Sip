@@ -34,6 +34,8 @@ public:
 
     virtual Object acceptFunction(Function &function) override;
 
+    virtual Object accept_Return(_Return &_return) override;
+
     virtual Object acceptCall(Call &call) override;
 
     virtual Object accept_If(_If &_if) override;

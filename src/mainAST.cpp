@@ -97,7 +97,7 @@ void defineAST(const std::string &outputDir, const std::string &baseName,
     writer << "#include <memory>" << '\n';
     writer << "#include <LoxCallable.hpp>" << '\n';
     writer << "#include <utility>" << '\n';
-    writer << "using Object = std::variant<std::monostate, int, std::string, double, bool, Clock>;"
+    writer << "using Object = std::variant<std::monostate, int, std::string, double, bool>;"
            << std::endl;
     writer << "using std::unique_ptr;" << '\n';
     writer << "using std::shared_ptr;" << '\n';
@@ -179,7 +179,8 @@ auto main(int argc, char *argv[]) -> int {
                  "Expression : shared_ptr<Expr> expression",
                  "Function   : shared_ptr<Token> name, vector<shared_ptr<Token>> params, vector<shared_ptr<Stmt>> body",
                  "Print      : unique_ptr<Expr> expression",
-                 "Var        : unique_ptr<Token> name, unique_ptr<Expr> initializer"
+                 "_Return     : unique_ptr<Token> keyword, shared_ptr<Expr> value",
+                 "Var        : unique_ptr<Token> name, unique_ptr<Expr> initializer",
               });
     return 0;
 }
