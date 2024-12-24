@@ -8,6 +8,7 @@
 #include <Expr.hpp>
 #include <Stmt.hpp>
 #include <RuntimeError.hpp>
+#include <Return.hpp>
 
 Object Interpreter::acceptExpr(Expr &expr) { return std::monostate(); }
 
@@ -43,9 +44,13 @@ Object Interpreter::acceptCall(Call &call) {
 }
 
 Object Interpreter::acceptFunction(Function &function) {
-    auto func = std::make_shared<Lox_Function>(function);
+    auto func = std::make_shared<Lox_Function>(function, environment);
     environment->define(function.name->lexeme, *func);
     return {};
+}
+
+Object Interpreter::accept_Return(_Return &_return) {
+    throw evaluate(*_return.value);
 }
 
 Object Interpreter::acceptStmt(Stmt &stmt) { return 3; }
@@ -57,9 +62,9 @@ Object Interpreter::acceptBlock(Block &block) {
 
 Object Interpreter::accept_If(_If &_if) {
     if (is_truth(evaluate(*_if.condition))) {
-        execute(std::move(_if.then_branch));
+        execute(_if.then_branch);
     } else if (_if.else_branch != nullptr) {
-        execute(std::move(_if.else_branch));
+        execute(_if.else_branch);
     }
     return std::monostate();
 }

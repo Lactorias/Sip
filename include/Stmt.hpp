@@ -1,5 +1,6 @@
 #ifndef STMT
 #define STMT
+#include <SipVariant.hpp>
 #include <Token.hpp>
 #include <Expr.hpp>
 #include <variant>
@@ -7,7 +8,6 @@
 #include <memory>
 #include <LoxCallable.hpp>
 #include <utility>
-using Object = std::variant<std::monostate, int, std::string, double, bool, Lox_Callable>;
 using std::unique_ptr;
 using std::shared_ptr;
 using std::vector;
@@ -18,6 +18,7 @@ class Block;
 class Expression;
 class Function;
 class Print;
+class _Return;
 class Var;
 class Stmt;
 
@@ -35,6 +36,8 @@ public:
     virtual Object acceptFunction(Function &function) = 0;
 
     virtual Object acceptPrint(Print &print) = 0;
+
+    virtual Object accept_Return(_Return &_return) = 0;
 
     virtual Object acceptVar(Var &var) = 0;
 
@@ -115,6 +118,18 @@ public:
     }
 
     unique_ptr<Expr> expression;
+};
+
+class _Return : public Stmt {
+public:
+    _Return(unique_ptr<Token> keyword, shared_ptr<Expr> value) : keyword(std::move(keyword)), value(std::move(value)) {}
+
+    Object visit (VisitorStmt &visitor) override {
+        return visitor.accept_Return(*this);
+    }
+
+    unique_ptr<Token> keyword;
+    shared_ptr<Expr> value;
 };
 
 class Var : public Stmt {
