@@ -18,6 +18,37 @@ public:
         values[name] = value;
     }
 
+    auto get_at(int distance, const std::string& name) -> Object {
+        return ancestor(distance).values[name];
+        // if (distance <= 0 && values.contains(name)) {
+        //     return values[name];
+        // }
+        // if (distance > 0 && enclosing) {
+        //     return enclosing->get_at(distance - 1, name);
+        // }
+        // return 9999999;
+    }
+
+    auto assign_at(int distance, Token &name, Object &value) -> void {
+        ancestor(distance).values[name.lexeme] = value;
+        // if (distance <= 0 && values.contains(name.lexeme)) {
+        //     values[name.lexeme] = value;
+        //     return;
+        // }
+        // if (distance > 0 && enclosing) {
+        //     enclosing->assign_at(distance - 1, name, value);
+        //     return;
+        // }
+    }
+
+    auto ancestor(int distance) -> Environment {
+        auto environment = *this;
+        for (int i = 0; i < distance; ++i) {
+            environment = environment.enclosing;
+        }
+        return environment;
+    }
+
     auto get(Token& name) -> Object {
         if (values.find(name.lexeme) != values.end()) {
             return values[name.lexeme];

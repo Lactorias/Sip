@@ -3,6 +3,7 @@
 #include <Parser.hpp>
 #include <Ast_Printer.hpp>
 #include <Interpreter.hpp>
+#include <Resolver.hpp>
 
 #include <iostream>
 #include <ostream>
@@ -14,20 +15,23 @@
 
 
 /*
-    run() is utilised when the compiler is executed with some parameter input, i.e a conversion occurs between user and compiler,
+    run() is utilised when the compiler is executed with some parameter input, i.e a conversation occurs between user and compiler,
     or the function is provided with an input file for example.
 */ 
 void run(std::string input) {
-    auto interpreter = Interpreter();
+    auto interpreter = std::make_shared<Interpreter>(Interpreter());
     auto scanner = Scanner(input);
     auto tokens = scanner.scan_tokens();
     auto parser = Parser(tokens);
+    auto resolver = Resolver(interpreter); 
     auto expression = std::vector<std::shared_ptr<Stmt>>{parser.parse()};
+    resolver.resolve(expression);
+    if (!resolver.sip_logger.empty()) return;
     if (expression.empty()) {
         std::cerr << "error : expression is null";
         return;
     }
-    interpreter.interpret(expression);
+    interpreter->interpret(expression);
 }
 /*
     run_file() is utilised when the compiler is executed with a file containing some input, this is read and passed to run(),

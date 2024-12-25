@@ -28,6 +28,10 @@ auto Interpreter::execute(std::shared_ptr<Stmt> stmt) -> void {
     else std::cout << "nah" << '\n';
 }
 
+auto Interpreter::resolve(Expr &expr, int depth) -> void {
+    locals[expr.get_id()] = depth;
+}
+
 Object Interpreter::acceptCall(Call &call) {
     auto callee = evaluate(*call.callee);
     vector<Object> arguments;
@@ -104,7 +108,13 @@ auto Interpreter::execute_block(const std::vector<std::shared_ptr<Stmt>>& statem
 
 Object Interpreter::acceptAssign(Assign &assign) {
     auto value = evaluate(*assign.value);
-    environment->assign(*assign.name, value);
+    auto distance = locals.find(assign.get_id());
+    if (distance != locals.end()) {
+        environment->assign(*assign.name, value);
+    } else {
+        globals->assign(*assign.name, value);
+    }
+    //environment->assign(*assign.name, value);
     return value;
 }
 
@@ -204,7 +214,16 @@ Object Interpreter::acceptPrint(Print &print) {
 }
 
 Object Interpreter::acceptVariable(Variable &variable) {
-    return environment->get(*variable.name);
+    return lookup_variable(*variable.name, variable);
+}
+
+auto Interpreter::lookup_variable(Token &name, Expr &expr) -> Object {
+    auto distance = locals.find(expr.get_id());
+    if (distance != locals.end()) {
+        return environment->get(name);
+    } else {
+        return globals->get(name);
+    }
 }
 
 Object Interpreter::acceptVar(Var &var) {
@@ -215,7 +234,7 @@ Object Interpreter::acceptVar(Var &var) {
 }
 
 auto Interpreter::is_truth(const Object &object) -> bool {
-    // monostate can represent null/void
+    // monostate can repshared null/void
     if (std::holds_alternative<std::monostate>(object)) return false;
     if (std::holds_alternative<bool>(object)) return std::get<bool>(object);
     return true;

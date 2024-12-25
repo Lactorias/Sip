@@ -23,6 +23,9 @@ class Variable;
 class Expr;
 
 
+inline static int EXPR_ID = 0;
+
+
 class VisitorExpr {
 public:
     virtual Object acceptAssign(Assign &assign) = 0;
@@ -47,41 +50,58 @@ public:
 class Expr {
 public:
     virtual Object visit(VisitorExpr &visitor) = 0;
+
+    virtual int get_id() const = 0;
 };
 
 class Assign : public Expr {
 public:
-    Assign(unique_ptr<Token> name, unique_ptr<Expr> value) : name(std::move(name)), value(std::move(value)) {}
+    Assign(shared_ptr<Token> name, shared_ptr<Expr> value) : name((name)), value((value)), this_id(EXPR_ID++) {}
 
     Object visit (VisitorExpr &visitor) override {
         return visitor.acceptAssign(*this);
     }
 
-    unique_ptr<Token> name;
-    unique_ptr<Expr> value;
+    int get_id() const override {
+        return this_id;
+    }
+
+    int this_id;
+    shared_ptr<Token> name;
+    shared_ptr<Expr> value;
 };
 
 class Binary : public Expr {
 public:
-    Binary(unique_ptr<Expr> left, unique_ptr<Token> oper, unique_ptr<Expr> right) : left(std::move(left)), oper(std::move(oper)), right(std::move(right)) {}
+    Binary(shared_ptr<Expr> left, unique_ptr<Token> oper, shared_ptr<Expr> right) : left((left)), oper(std::move(oper)), right((right)), this_id(EXPR_ID++) {}
 
     Object visit (VisitorExpr &visitor) override {
         return visitor.acceptBinary(*this);
     }
 
-    unique_ptr<Expr> left;
+    int get_id() const override  {
+        return this_id;
+    }
+
+    int this_id;
+    shared_ptr<Expr> left;
     unique_ptr<Token> oper;
-    unique_ptr<Expr> right;
+    shared_ptr<Expr> right;
 };
 
 class Call : public Expr {
 public:
-    Call(shared_ptr<Expr> callee, shared_ptr<Token> paren, vector<shared_ptr<Expr>> arguments) : callee(std::move(callee)), paren(std::move(paren)), arguments(std::move(arguments)) {}
+    Call(shared_ptr<Expr> callee, shared_ptr<Token> paren, vector<shared_ptr<Expr>> arguments) : callee((callee)), paren((paren)), arguments((arguments)), this_id(EXPR_ID++) {}
 
     Object visit (VisitorExpr &visitor) override {
         return visitor.acceptCall(*this);
     }
 
+    int get_id() const override  {
+        return this_id;
+    }
+
+    int this_id;
     shared_ptr<Expr> callee;
     shared_ptr<Token> paren;
     vector<shared_ptr<Expr>> arguments;
@@ -89,59 +109,84 @@ public:
 
 class Grouping : public Expr {
 public:
-    Grouping(unique_ptr<Expr> expression) : expression(std::move(expression)) {}
+    Grouping(shared_ptr<Expr> expression) : expression((expression)), this_id(EXPR_ID++) {}
 
     Object visit (VisitorExpr &visitor) override {
         return visitor.acceptGrouping(*this);
     }
 
-    unique_ptr<Expr> expression;
+    int get_id() const override  {
+        return this_id;
+    }
+
+    int this_id;
+    shared_ptr<Expr> expression;
 };
 
 class Literal : public Expr {
 public:
-    Literal(const Object value) : value(std::move(value)) {}
+    Literal(const Object value) : value(std::move(value)), this_id(EXPR_ID++) {}
 
     Object visit (VisitorExpr &visitor) override {
         return visitor.acceptLiteral(*this);
     }
 
+    int get_id() const override  {
+        return this_id;
+    }
+
+    int this_id;
     const Object value;
 };
 
 class Logical : public Expr {
 public:
-    Logical(unique_ptr<Expr> left, unique_ptr<Token> oper, unique_ptr<Expr> right) : left(std::move(left)), oper(std::move(oper)), right(std::move(right)) {}
+    Logical(shared_ptr<Expr> left, unique_ptr<Token> oper, shared_ptr<Expr> right) : left(left), oper(std::move(oper)), right(right), this_id(EXPR_ID++) {}
 
     Object visit (VisitorExpr &visitor) override {
         return visitor.acceptLogical(*this);
     }
 
-    unique_ptr<Expr> left;
+    int get_id() const override  {
+        return this_id;
+    }
+
+    int this_id;
+    shared_ptr<Expr> left;
     unique_ptr<Token> oper;
-    unique_ptr<Expr> right;
+    shared_ptr<Expr> right;
 };
 
 class Unary : public Expr {
 public:
-    Unary(unique_ptr<Token> oper, unique_ptr<Expr> right) : oper(std::move(oper)), right(std::move(right)) {}
+    Unary(unique_ptr<Token> oper, shared_ptr<Expr> right) : oper(std::move(oper)), right((right)), this_id(EXPR_ID++) {}
 
     Object visit (VisitorExpr &visitor) override {
         return visitor.acceptUnary(*this);
     }
 
+    int get_id() const override  {
+        return this_id;
+    }
+
+    int this_id;
     unique_ptr<Token> oper;
-    unique_ptr<Expr> right;
+    shared_ptr<Expr> right;
 };
 
 class Variable : public Expr {
 public:
-    Variable(unique_ptr<Token> name) : name(std::move(name)) {}
+    Variable(unique_ptr<Token> name) : name(std::move(name)), this_id(EXPR_ID++) {}
 
     Object visit (VisitorExpr &visitor) override {
         return visitor.acceptVariable(*this);
     }
 
+    int get_id() const override  {
+        return this_id;
+    }
+
+    int this_id;
     unique_ptr<Token> name;
 };
 
