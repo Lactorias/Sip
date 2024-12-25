@@ -8,6 +8,7 @@
 #include <chrono>
 #include <Environment.hpp>
 #include <LoxCallable.hpp>
+#include <map>
 
 /*
     To interpret our language in the early stages, we will directly execute the syntax tree itself.
@@ -29,6 +30,8 @@ public:
     auto execute_block(const std::vector<std::shared_ptr<Stmt>>& statements, std::shared_ptr<Environment> environment) -> void;
 
     auto interpret(std::vector<std::shared_ptr<Stmt>> statements) -> void;
+
+    auto resolve(Expr &expr, int depth) -> void;
 
     virtual Object accept_While(_While &_while) override;
 
@@ -71,6 +74,8 @@ private:
 
     auto execute(std::shared_ptr<Stmt> stmt) -> void;
 
+    auto lookup_variable(Token &name, Expr &expr) -> Object;
+
     auto is_truth(const Object &object) -> bool;
 
     auto is_equal(Object &a, Object &b) -> bool;
@@ -86,6 +91,7 @@ private:
 public:
     std::shared_ptr<Environment> globals = std::make_shared<Environment>();
     std::shared_ptr<Environment> environment = globals;
+    std::unordered_map<int /* Expr ID */ , int /* Depth */> locals;
 };
 
 #endif // INTERPRETER

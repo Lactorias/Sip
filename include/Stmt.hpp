@@ -111,13 +111,13 @@ public:
 
 class Print : public Stmt {
 public:
-    Print(unique_ptr<Expr> expression) : expression(std::move(expression)) {}
+    Print(shared_ptr<Expr> expression) : expression(std::move(expression)) {}
 
     Object visit (VisitorStmt &visitor) override {
         return visitor.acceptPrint(*this);
     }
 
-    unique_ptr<Expr> expression;
+    shared_ptr<Expr> expression;
 };
 
 class _Return : public Stmt {
@@ -134,14 +134,14 @@ public:
 
 class Var : public Stmt {
 public:
-    Var(unique_ptr<Token> name, unique_ptr<Expr> initializer) : name(std::move(name)), initializer(std::move(initializer)) {}
+    Var(shared_ptr<Token> name, shared_ptr<Expr> initializer) : name((name)), initializer((initializer)) {}
 
     Object visit (VisitorStmt &visitor) override {
         return visitor.acceptVar(*this);
     }
 
-    unique_ptr<Token> name;
-    unique_ptr<Expr> initializer;
+    shared_ptr<Token> name;
+    shared_ptr<Expr> initializer;
 };
 
 

@@ -11,6 +11,7 @@ SOURCES = $(SRC_DIR)/errlog.cpp \
 		  $(SRC_DIR)/interpreter.cpp \
 		  $(SRC_DIR)/runtimeerror.cpp \
 		  $(SRC_DIR)/loxcallable.cpp \
+		  $(SRC_DIR)/resolver.cpp \
 		  
 
 
