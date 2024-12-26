@@ -36,6 +36,8 @@ private:
 
     auto for_statement() -> std::shared_ptr<Stmt>;
 
+    auto class_declaration() -> std::shared_ptr<Stmt>;
+
     auto return_statement() -> unique_ptr<Stmt>;
 
     auto var_declaration() -> unique_ptr<Stmt>;

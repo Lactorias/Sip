@@ -45,6 +45,8 @@ auto Parser::assignment() -> unique_ptr<Expr> {
         if (auto var_expr = dynamic_cast<Variable*>(expr.get())) {
             auto name = std::move(*var_expr).name;
             return std::make_unique<Assign>(std::move(name), std::move(value));
+        } else if (auto var_expr2 = dynamic_cast<Get*>(expr.get())) {
+            return std::make_unique<Set>(std::move(var_expr2->object), std::move(var_expr2->name), std::move(value));
         }
         error(*equals, "Invalid assignment target.");
     }
@@ -101,6 +103,7 @@ auto Parser::parse() -> std::vector<std::shared_ptr<Stmt>> {
 
 auto Parser::declaration() -> std::shared_ptr<Stmt> {
     try {
+        if (match(Token::TokenType::CLASS)) return class_declaration();
         if (match(Token::TokenType::FUN)) return function("function");
         if (match(Token::TokenType::VAR)) return var_declaration();
         return statement();
@@ -108,6 +111,20 @@ auto Parser::declaration() -> std::shared_ptr<Stmt> {
         synchronize();
         return nullptr;
     }
+}
+
+auto Parser::class_declaration() -> std::shared_ptr<Stmt> {
+    auto name = consume(Token::TokenType::IDENTIFIER, "Expect class type.");
+    consume(Token::TokenType::LEFT_BRACE, "Expect '{' before class body.");
+
+    auto methods = vector<shared_ptr<Function>>();
+    while (!check(Token::TokenType::RIGHT_BRACE) && !at_end()) {
+        methods.push_back(function("method"));
+    }
+
+    consume(Token::TokenType::RIGHT_BRACE, "Expect '}' after class body.");
+
+    return std::make_shared<_Class>(std::move(name), methods);
 }
 
 auto Parser::var_declaration() -> unique_ptr<Stmt> {
@@ -293,6 +310,9 @@ auto Parser::call() -> unique_ptr<Expr> {
     while (true) {
         if (match(Token::TokenType::LEFT_PAREN)) {
             expr = finish_call(std::move(expr));
+        } else if (match(Token::TokenType::DOT)) { 
+            auto name = consume(Token::TokenType::IDENTIFIER, "Expect property name after '.'.");
+            expr = std::make_unique<Get>(std::move(expr), std::move(name));
         } else {
             break;
         }
@@ -327,6 +347,8 @@ auto Parser::primary() -> unique_ptr<Expr> {
         return std::make_unique<Literal>(nullptr);
     if (match(Token::TokenType::NUMBER, Token::TokenType::STRING))
         return std::make_unique<Literal>(previous()->literal);
+    if (match(Token::TokenType::THIS))
+        return std::make_unique<_This>(previous());
     if (match(Token::TokenType::IDENTIFIER))
         return std::make_unique<Variable>(previous());
     if (match(Token::TokenType::LEFT_PAREN)) {

@@ -1,5 +1,6 @@
 #include <Interpreter.hpp>
 #include <Token.hpp>
+#include <SipVariant.hpp>
 #include <variant>
 #include <iostream>
 #include <Ast_Printer.hpp>
@@ -53,8 +54,43 @@ Object Interpreter::acceptFunction(Function &function) {
     return {};
 }
 
+Object Interpreter::accept_Class(_Class &_class) {
+    environment->define(_class.name->lexeme, std::monostate());
+    auto methods = std::unordered_map<std::string, Lox_Function>();
+    for (auto method : _class.methods) {
+        auto function = Lox_Function(*method, environment);
+        methods.emplace(method->name->lexeme, function);
+    }
+    auto klass = Lox_Class(_class.name->lexeme, methods);
+    environment->assign(*_class.name, static_cast<Lox_Callable>(klass));
+    return {};
+}
+
+Object Interpreter::accept_This(_This& _this) {
+    return lookup_variable(*_this.keyword, _this);
+}
+
 Object Interpreter::accept_Return(_Return &_return) {
     throw evaluate(*_return.value);
+}
+
+Object Interpreter::acceptGet(Get &get) {
+    auto object = evaluate(*get.object);
+    if (!std::holds_alternative<Lox_Callable>(object)) throw RuntimeError(*get.name, "Only instances have properties."); 
+    auto callable = std::get<Lox_Callable>(object);
+    if (!std::holds_alternative<Lox_Instance>(callable)) throw RuntimeError(*get.name, "Only instances have properties."); 
+    return std::get<Lox_Instance>(callable).get(*get.name);
+}
+
+Object Interpreter::acceptSet(Set &set) {
+    auto object = evaluate(*set.object);
+    if (!std::holds_alternative<Lox_Callable>(object)) return {};
+    auto callee = std::get<Lox_Callable>(object);
+    if (!std::holds_alternative<Lox_Instance>(callee)) throw RuntimeError(*set.name, "Only instances have fields.");
+    auto instance = std::get<Lox_Instance>(callee);
+    auto value = evaluate(*set.value);
+    instance.set(*set.name, value);
+    return value;
 }
 
 Object Interpreter::acceptStmt(Stmt &stmt) { return 3; }

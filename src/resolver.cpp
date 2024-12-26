@@ -32,6 +32,35 @@ auto Resolver::acceptVariable(Variable &variable) -> Object {
     return {};
 }
 
+auto Resolver::accept_Class(_Class &_class) -> Object {
+    declare(_class.name);
+    define(_class.name);
+    begin_scope();
+    scopes.back()["this"] = true;
+    for (auto method : _class.methods) {
+        auto decl = Function_Type::METHOD;
+        resolve_function(method, decl);
+    }
+    end_scope();
+    return {};
+}
+
+auto Resolver::accept_This(_This &_this) -> Object {
+    resolve_local(_this, *_this.keyword);
+    return {};
+}
+
+auto Resolver::acceptGet(Get &get) -> Object {
+    resolve(*get.object);
+    return {};
+}
+
+auto Resolver::acceptSet(Set &set) -> Object {
+    resolve(*set.value);
+    resolve(*set.object);
+    return {};
+}
+
 auto Resolver::acceptAssign(Assign &assign) -> Object {
     resolve(*assign.value);
     resolve_local(assign, *assign.name);

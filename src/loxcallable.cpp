@@ -22,7 +22,42 @@ auto Lox_Function::call(Interpreter &interpreter, std::vector<Object> &arguments
     return {};
 }
 
+auto Lox_Function::bind(Lox_Instance instance) -> Lox_Function {
+    auto environment = std::make_shared<Environment>(closure_m);
+    environment->define("this", static_cast<Lox_Callable>(instance));
+    return Lox_Function(declaration_m, environment);
+}
+
+auto Lox_Class::call(Interpreter &interpreter, std::vector<Object> &arguments) -> Object {
+    auto instance = std::make_shared<Lox_Instance>(*this);
+    return static_cast<Lox_Callable>(*instance);
+}
+
+auto Lox_Class::arity() -> size_t { return 0; }
+
+auto Lox_Class::find_method(std::string name) -> Lox_Function {
+        if (methods.contains(name)) {
+            return methods.at(name);
+        }
+        return Lox_Function("", nullptr);
+    }
+
 Func::Func(std::function<auto()->size_t> arity_t, std::function<auto(Interpreter &, std::vector<Object> &)->Object> call_t, std::string name_t)
     : name(name_t)
     , call(call_t)
     , arity(arity_t) {} 
+
+
+
+auto Lox_Instance::get(Token& name) -> Object {
+        if (fields.contains(name.lexeme)) {
+            return fields[name.lexeme];
+        }
+        auto method = klass.find_method(name.lexeme);
+        if (method.closure_m != nullptr) return method.bind(*this);
+        throw RuntimeError(name, "Undefined property '" + name.lexeme + "'.");
+    }
+
+auto Lox_Instance::set(Token& name, Object& value) -> void {
+    fields[name.lexeme] = value;
+}

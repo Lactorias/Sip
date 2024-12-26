@@ -62,8 +62,11 @@ void defineType(std::ofstream &writer, const std::string &baseName,
             writer << " " << name << "(std::move(" << name << "))";
         }
     }
-    writer << " {}" << std::endl;
-
+    if (baseName == "Expr") {
+        writer << ", this_id(EXPR_ID++) {}" << '\n';    
+    } else {
+        writer << " {}" << '\n';
+    }
     // Visit function
 
     writer << '\n';
@@ -71,6 +74,15 @@ void defineType(std::ofstream &writer, const std::string &baseName,
     writer << "    Object visit (Visitor" << baseName << " &visitor) override {" << '\n';
     writer << "        return visitor.accept" << className << "(*this);" << '\n';
     writer << "    }" << '\n' << '\n';
+
+    writer << "\n" << "\n";
+    if (baseName == "Expr") {
+        writer << "    int get_id() const override {" << '\n';
+        writer << "        return this_id;" << '\n';
+        writer << "    }" << '\n' << '\n';
+
+        writer << "    int this_id;" << '\n';
+    }
 
     // Fields
     for (const auto &field : fields) {
@@ -90,6 +102,7 @@ void defineAST(const std::string &outputDir, const std::string &baseName,
     }
     writer << "#ifndef " << to_upper_str(baseName) << '\n';
     writer << "#define " << to_upper_str(baseName) << '\n';
+    writer << "#include <SipVariant.hpp>" << '\n';
     writer << "#include <Token.hpp>" << std::endl;
     writer << "#include <Expr.hpp>" << '\n';
     writer << "#include <variant>" << std::endl;
@@ -97,13 +110,17 @@ void defineAST(const std::string &outputDir, const std::string &baseName,
     writer << "#include <memory>" << '\n';
     writer << "#include <LoxCallable.hpp>" << '\n';
     writer << "#include <utility>" << '\n';
-    writer << "using Object = std::variant<std::monostate, int, std::string, double, bool>;"
-           << std::endl;
     writer << "using std::unique_ptr;" << '\n';
     writer << "using std::shared_ptr;" << '\n';
     writer << "using std::vector;" << '\n';
 
     writer << std::endl;
+
+    writer << '\n';
+    if (baseName == "Expr") {
+        writer << "inline static int EXPR_ID = 0;" << '\n';
+    }
+
 
     for (auto const& type : types) {
         auto type_parts = split(type, ":");
@@ -118,14 +135,16 @@ void defineAST(const std::string &outputDir, const std::string &baseName,
     writer << '\n';
     writer << "class Visitor" << baseName << " {" << '\n';
     writer << "public:" << '\n';
-// neeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeed to add const to literal! also the namespaces
     for (auto const& type : types) {
         auto type_parts = split(type, ":");
         auto class_name = type_parts[0];
         class_name.erase(0, class_name.find_first_not_of(" \t"));
         class_name.erase(class_name.find_last_not_of(" \t") + 1);
-        if (class_name == "Literal") writer <<  "    virtual Object accept" << class_name << "(" << "const " << class_name << " &" << to_lower_str(class_name) << ") = 0;" << '\n' << '\n'; 
-        else writer <<  "    virtual Object accept" << class_name << "(" << class_name << " &" << to_lower_str(class_name) << ") = 0;" << '\n' << '\n';
+        if (class_name == "Literal") {
+            writer <<  "    virtual Object accept" << class_name << "(" << "const " << class_name << " &" << to_lower_str(class_name) << ") = 0;" << '\n' << '\n'; 
+        } else {
+            writer <<  "    virtual Object accept" << class_name << "(" << class_name << " &" << to_lower_str(class_name) << ") = 0;" << '\n' << '\n';
+        }
     }
     writer <<  "    virtual Object accept" << baseName << "(" << baseName << " &" << to_lower_str(baseName) << ") = 0;" << '\n' << '\n';
     writer << "};" << '\n';
@@ -133,6 +152,7 @@ void defineAST(const std::string &outputDir, const std::string &baseName,
     writer << "class " <<  baseName << " {" << '\n';
     writer << "public:" << '\n';
     writer << "    virtual Object visit(Visitor" << baseName << " &visitor) = 0;" << '\n';
+    if (baseName == "Expr") writer << "    virtual int get_id() const = 0;" << '\n';
     writer << "};" << '\n';
 
     for (const auto &type : types) {
@@ -161,14 +181,17 @@ auto main(int argc, char *argv[]) -> int {
     auto outputDir = argv[1]; // Argument for output directory
     defineAST(outputDir, "Expr",
               std::vector<std::string>{
-                  "Assign   : unique_ptr<Token> name, unique_ptr<Expr> value", 
-                  "Binary   : unique_ptr<Expr> left, unique_ptr<Token> oper, "
-                  "unique_ptr<Expr> right",
+                  "Assign   : shared_ptr<Token> name, shared_ptr<Expr> value", 
+                  "Binary   : shared_ptr<Expr> left, unique_ptr<Token> oper, "
+                  "shared_ptr<Expr> right",
                   "Call     : shared_ptr<Expr> callee, shared_ptr<Token> paren, vector<shared_ptr<Expr>> arguments",
-                  "Grouping : unique_ptr<Expr> expression",
+                  "Get      : unique_ptr<Expr> object, unique_ptr<Token> name",
+                  "Grouping : shared_ptr<Expr> expression",
                   "Literal  : const Object value",
-                  "Logical  : unique_ptr<Expr> left, unique_ptr<Token> oper, unique_ptr<Expr> right",
-                  "Unary    : unique_ptr<Token> oper, unique_ptr<Expr> right",
+                  "Logical  : shared_ptr<Expr> left, unique_ptr<Token> oper, shared_ptr<Expr> right",
+                  "Set      : shared_ptr<Expr> object, unique_ptr<Token> name, shared_ptr<Expr> value",
+                  "_This    : unique_ptr<Token> keyword",
+                  "Unary    : unique_ptr<Token> oper, shared_ptr<Expr> right",
                   "Variable : unique_ptr<Token> name",
               });
     defineAST(outputDir, "Stmt", 
@@ -176,11 +199,12 @@ auto main(int argc, char *argv[]) -> int {
                  "_If        : shared_ptr<Expr> condition, shared_ptr<Stmt> then_branch, shared_ptr<Stmt> else_branch",
                  "_While     : shared_ptr<Expr> condition, shared_ptr<Stmt> body",  
                  "Block      : vector<shared_ptr<Stmt>> statements",
+                 "_Class     : shared_ptr<Token> name, vector<shared_ptr<Function>> methods",
                  "Expression : shared_ptr<Expr> expression",
                  "Function   : shared_ptr<Token> name, vector<shared_ptr<Token>> params, vector<shared_ptr<Stmt>> body",
-                 "Print      : unique_ptr<Expr> expression",
-                 "_Return     : unique_ptr<Token> keyword, shared_ptr<Expr> value",
-                 "Var        : unique_ptr<Token> name, unique_ptr<Expr> initializer",
+                 "Print      : shared_ptr<Expr> expression",
+                 "_Return    : unique_ptr<Token> keyword, shared_ptr<Expr> value",
+                 "Var        : shared_ptr<Token> name, shared_ptr<Expr> initializer",
               });
     return 0;
 }

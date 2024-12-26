@@ -55,17 +55,33 @@ Object AST_Printer::acceptUnary(Unary &unary) {
 
 auto AST_Printer::resolve_to_string(const Object &obj) -> std::string {
     return std::visit(
-        overloaded{[](std::monostate) -> std::string { return "nil"; },
-                   [](int x) -> std::string { return std::to_string(x); },
-                   [](double d) -> std::string { return std::to_string(d); },
-                   [](const std::string &s) -> std::string { return s; },
-                   [](bool b) -> std::string { return (b == true) ? "true" : "false"; },
-                   [](char c) -> std::string { return std::string(c, 1); },
-                   [](auto &&other) -> std::string {
-                        throw std::runtime_error("Unexpected type in variant Object");
+        overloaded{
+            [](std::monostate) -> std::string { return "nil"; },
+            [](int x) -> std::string { return std::to_string(x); },
+            [](double d) -> std::string { return std::to_string(d); },
+            [](const std::string &s) -> std::string { return s; },
+            [](bool b) -> std::string { return (b == true) ? "true" : "false"; },
+            [](char c) -> std::string { return std::string(1, c); }, 
+            [](Lox_Callable callable) -> std::string {
+                return std::visit(
+                    overloaded{
+                        [](std::monostate) -> std::string { return "nil"; },
+                        [](Lox_Instance instance) -> std::string { 
+                            return instance; 
+                        },
+                        [](auto &&other) -> std::string {
+                            throw std::runtime_error("Unexpected type in Lox_Callable.");
+                        }
                     },
-                },
-        obj);
+                    callable 
+                );
+            },
+            [](auto &&other) -> std::string {
+                throw std::runtime_error("Unexpected type in Object.");
+            }
+        },
+        obj 
+    );
 }
 
 template <typename Expr>
