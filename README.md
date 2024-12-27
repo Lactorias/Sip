@@ -114,7 +114,7 @@ derived_class().lox_me();
 ```
 Indeed, both of the statements at the bottom will print "lox class here!". The first seems to own it as the function is defined within it. But how does the second class get to also use this?
 
-Lox has inheritance! You can extend a class with the '<' operator to fill your base class with all the methods from a base class!
+Lox has inheritance! You can extend a class with the '<' operator to fill your derived class with all the methods from a base class!
 
 Lox also provides you with the ability to create a constructor, use a method called "init" and this function will execute as soon as your class instance is created!
 
