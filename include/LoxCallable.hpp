@@ -32,7 +32,7 @@ using Object = std::variant<std::monostate, int, std::string, double, bool, Lox_
 
 struct Lox_Function {
 
-    Lox_Function(std::any declaration, std::shared_ptr<Environment> closure);
+    Lox_Function(std::any declaration, std::shared_ptr<Environment> closure, bool is_initializer);
 
     auto arity() -> size_t;
 
@@ -40,6 +40,7 @@ struct Lox_Function {
 
     auto bind(Lox_Instance instance) -> Lox_Function;
 
+    bool is_initializer_m;
     std::any declaration_m;
     std::shared_ptr<Environment> closure_m;
 

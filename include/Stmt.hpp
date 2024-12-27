@@ -97,7 +97,7 @@ public:
 
 class _Class : public Stmt {
 public:
-    _Class(shared_ptr<Token> name, vector<shared_ptr<Function>> methods) : name(std::move(name)), methods(std::move(methods)) {}
+    _Class(shared_ptr<Token> name, shared_ptr<Variable> superclass, vector<shared_ptr<Function>> methods) : name(std::move(name)), superclass(std::move(superclass)), methods(std::move(methods)) {}
 
     Object visit (VisitorStmt &visitor) override {
         return visitor.accept_Class(*this);
@@ -106,6 +106,7 @@ public:
 
 
     shared_ptr<Token> name;
+    shared_ptr<Variable> superclass;
     vector<shared_ptr<Function>> methods;
 };
 

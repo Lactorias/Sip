@@ -49,7 +49,7 @@ Object Interpreter::acceptCall(Call &call) {
 }
 
 Object Interpreter::acceptFunction(Function &function) {
-    auto func = std::make_shared<Lox_Function>(function, environment);
+    auto func = std::make_shared<Lox_Function>(function, environment, false);
     environment->define(function.name->lexeme, *func);
     return {};
 }
@@ -58,7 +58,7 @@ Object Interpreter::accept_Class(_Class &_class) {
     environment->define(_class.name->lexeme, std::monostate());
     auto methods = std::unordered_map<std::string, Lox_Function>();
     for (auto method : _class.methods) {
-        auto function = Lox_Function(*method, environment);
+        auto function = Lox_Function(*method, environment, method->name->lexeme == "init");
         methods.emplace(method->name->lexeme, function);
     }
     auto klass = Lox_Class(_class.name->lexeme, methods);

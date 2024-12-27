@@ -62,6 +62,7 @@ private:
     enum class Function_Type {
         NONE,
         FUNCTION,
+        INITIALIZER,
         METHOD,
     };
 

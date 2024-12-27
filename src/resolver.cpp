@@ -39,6 +39,9 @@ auto Resolver::accept_Class(_Class &_class) -> Object {
     scopes.back()["this"] = true;
     for (auto method : _class.methods) {
         auto decl = Function_Type::METHOD;
+        if (method->name->lexeme == "init") {
+            decl = Function_Type::INITIALIZER;
+        }
         resolve_function(method, decl);
     }
     end_scope();
@@ -94,6 +97,9 @@ auto Resolver::acceptPrint(Print &print) -> Object {
 auto Resolver::accept_Return(_Return &_return) -> Object {
     if (current_function == Function_Type::NONE) {
         sip_logger.error(*_return.keyword, "Can't return from top-level code.");
+    }
+    if (current_function == Function_Type::INITIALIZER) {
+        sip_logger.error(*_return.keyword, "Can't return a value from an initializer.");
     }
     if (_return.value != nullptr) {
         resolve(*_return.value);

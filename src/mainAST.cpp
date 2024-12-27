@@ -199,7 +199,7 @@ auto main(int argc, char *argv[]) -> int {
                  "_If        : shared_ptr<Expr> condition, shared_ptr<Stmt> then_branch, shared_ptr<Stmt> else_branch",
                  "_While     : shared_ptr<Expr> condition, shared_ptr<Stmt> body",  
                  "Block      : vector<shared_ptr<Stmt>> statements",
-                 "_Class     : shared_ptr<Token> name, vector<shared_ptr<Function>> methods",
+                 "_Class     : shared_ptr<Token> name, shared_ptr<Variable> superclass, vector<shared_ptr<Function>> methods",
                  "Expression : shared_ptr<Expr> expression",
                  "Function   : shared_ptr<Token> name, vector<shared_ptr<Token>> params, vector<shared_ptr<Stmt>> body",
                  "Print      : shared_ptr<Expr> expression",
