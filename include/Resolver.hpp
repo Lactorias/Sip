@@ -31,7 +31,17 @@ public:
 
     virtual Object acceptVar(Var &var) override;
 
+    virtual Object accept_Class(_Class &_class) override;
+
+    virtual Object acceptGet(Get &get) override;
+
+    virtual Object accept_This(_This &_this) override;
+
+    virtual Object acceptSet(Set &set) override;
+
     virtual Object acceptExpression(Expression &expression) override;
+
+    virtual Object acceptSuper(Super &super) override;
 
     virtual Object acceptPrint(Print &print) override;
 
@@ -54,6 +64,8 @@ private:
     enum class Function_Type {
         NONE,
         FUNCTION,
+        INITIALIZER,
+        METHOD,
     };
 
 private:

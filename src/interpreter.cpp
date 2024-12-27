@@ -1,5 +1,6 @@
 #include <Interpreter.hpp>
 #include <Token.hpp>
+#include <SipVariant.hpp>
 #include <variant>
 #include <iostream>
 #include <Ast_Printer.hpp>
@@ -48,13 +49,84 @@ Object Interpreter::acceptCall(Call &call) {
 }
 
 Object Interpreter::acceptFunction(Function &function) {
-    auto func = std::make_shared<Lox_Function>(function, environment);
+    auto func = std::make_shared<Lox_Function>(function, environment, false);
     environment->define(function.name->lexeme, *func);
     return {};
 }
 
+Object Interpreter::accept_Class(_Class &_class) {
+    Object superclass{};
+    if (_class.superclass != nullptr) {
+        superclass = evaluate(*_class.superclass);
+        if (!std::holds_alternative<Lox_Callable>(superclass)) throw RuntimeError(*_class.superclass->name, "Superclass must be a class.");
+        auto super_callable = std::get<Lox_Callable>(superclass);
+        if (!std::holds_alternative<Lox_Class>(super_callable)) throw RuntimeError(*_class.superclass->name, "Superclass must be a class."); 
+    }
+
+    environment->define(_class.name->lexeme, std::monostate());
+
+    if (_class.superclass != nullptr) {
+        environment = std::make_shared<Environment>(environment);
+        environment->define("super", superclass);
+    }
+
+    auto methods = std::unordered_map<std::string, Lox_Function>();
+    for (auto method : _class.methods) {
+        auto function = Lox_Function(*method, environment, method->name->lexeme == "init");
+        methods.emplace(method->name->lexeme, function);
+    }
+    if (_class.superclass != nullptr) {
+        auto super_callable = std::get<Lox_Callable>(superclass);
+        auto super_class = std::get<Lox_Class>(super_callable);
+        auto klass = Lox_Class(_class.name->lexeme, super_class, methods);
+        environment = environment->enclosing;
+        environment->assign(*_class.name, static_cast<Lox_Callable>(klass));
+    } else {
+        auto klass = Lox_Class(_class.name->lexeme, nullptr, methods);
+        environment->assign(*_class.name, static_cast<Lox_Callable>(klass));
+    }
+    return {};
+}
+
+Object Interpreter::acceptSuper(Super &super) {
+    auto distance = locals[super.get_id()];
+    auto superclass = std::get<Lox_Callable>(environment->get_at(distance, "super"));
+    auto super_class = std::get<Lox_Class>(superclass);
+
+    auto object = std::get<Lox_Callable>(environment->get_at(distance - 1, "this"));
+    auto object_c = std::get<Lox_Instance>(object);
+
+    auto method = super_class.find_method(super.method->lexeme);
+
+    if (method.closure_m == nullptr) throw RuntimeError(*super.method, "Undefined property '" + super.method->lexeme + "'.");
+    return method.bind(object_c);
+}
+
+Object Interpreter::accept_This(_This& _this) {
+    return lookup_variable(*_this.keyword, _this);
+}
+
 Object Interpreter::accept_Return(_Return &_return) {
     throw evaluate(*_return.value);
+}
+
+Object Interpreter::acceptGet(Get &get) {
+    auto object = evaluate(*get.object);
+    if (!std::holds_alternative<Lox_Callable>(object)) throw RuntimeError(*get.name, "Only instances have properties."); 
+    auto callable = std::get<Lox_Callable>(object);
+    if (!std::holds_alternative<Lox_Instance>(callable)) throw RuntimeError(*get.name, "Only instances have properties."); 
+    return std::get<Lox_Instance>(callable).get(*get.name);
+}
+
+Object Interpreter::acceptSet(Set &set) {
+    auto object = evaluate(*set.object);
+    if (!std::holds_alternative<Lox_Callable>(object)) return {};
+    auto callee = std::get<Lox_Callable>(object);
+    if (!std::holds_alternative<Lox_Instance>(callee)) throw RuntimeError(*set.name, "Only instances have fields.");
+    auto instance = std::get<Lox_Instance>(callee);
+    auto value = evaluate(*set.value);
+    instance.set(*set.name, value);
+    return value;
 }
 
 Object Interpreter::acceptStmt(Stmt &stmt) { return 3; }

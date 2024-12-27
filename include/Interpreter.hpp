@@ -41,6 +41,16 @@ public:
 
     virtual Object acceptCall(Call &call) override;
 
+    virtual Object accept_Class(_Class &_class) override;
+
+    virtual Object acceptGet(Get &get) override;
+
+    virtual Object acceptSet(Set &set) override;
+
+    virtual Object acceptSuper(Super &super) override;
+
+    virtual Object accept_This(_This &_this) override;
+
     virtual Object accept_If(_If &_if) override;
 
     virtual Object acceptLogical(Logical &logical) override;

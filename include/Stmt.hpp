@@ -12,9 +12,11 @@ using std::unique_ptr;
 using std::shared_ptr;
 using std::vector;
 
+
 class _If;
 class _While;
 class Block;
+class _Class;
 class Expression;
 class Function;
 class Print;
@@ -30,6 +32,8 @@ public:
     virtual Object accept_While(_While &_while) = 0;
 
     virtual Object acceptBlock(Block &block) = 0;
+
+    virtual Object accept_Class(_Class &_class) = 0;
 
     virtual Object acceptExpression(Expression &expression) = 0;
 
@@ -57,6 +61,8 @@ public:
         return visitor.accept_If(*this);
     }
 
+
+
     shared_ptr<Expr> condition;
     shared_ptr<Stmt> then_branch;
     shared_ptr<Stmt> else_branch;
@@ -70,6 +76,8 @@ public:
         return visitor.accept_While(*this);
     }
 
+
+
     shared_ptr<Expr> condition;
     shared_ptr<Stmt> body;
 };
@@ -82,7 +90,24 @@ public:
         return visitor.acceptBlock(*this);
     }
 
+
+
     vector<shared_ptr<Stmt>> statements;
+};
+
+class _Class : public Stmt {
+public:
+    _Class(shared_ptr<Token> name, shared_ptr<Variable> superclass, vector<shared_ptr<Function>> methods) : name(std::move(name)), superclass(std::move(superclass)), methods(std::move(methods)) {}
+
+    Object visit (VisitorStmt &visitor) override {
+        return visitor.accept_Class(*this);
+    }
+
+
+
+    shared_ptr<Token> name;
+    shared_ptr<Variable> superclass;
+    vector<shared_ptr<Function>> methods;
 };
 
 class Expression : public Stmt {
@@ -92,6 +117,8 @@ public:
     Object visit (VisitorStmt &visitor) override {
         return visitor.acceptExpression(*this);
     }
+
+
 
     shared_ptr<Expr> expression;
 };
@@ -103,6 +130,8 @@ public:
     Object visit (VisitorStmt &visitor) override {
         return visitor.acceptFunction(*this);
     }
+
+
 
     shared_ptr<Token> name;
     vector<shared_ptr<Token>> params;
@@ -117,6 +146,8 @@ public:
         return visitor.acceptPrint(*this);
     }
 
+
+
     shared_ptr<Expr> expression;
 };
 
@@ -128,17 +159,21 @@ public:
         return visitor.accept_Return(*this);
     }
 
+
+
     unique_ptr<Token> keyword;
     shared_ptr<Expr> value;
 };
 
 class Var : public Stmt {
 public:
-    Var(shared_ptr<Token> name, shared_ptr<Expr> initializer) : name((name)), initializer((initializer)) {}
+    Var(shared_ptr<Token> name, shared_ptr<Expr> initializer) : name(std::move(name)), initializer(std::move(initializer)) {}
 
     Object visit (VisitorStmt &visitor) override {
         return visitor.acceptVar(*this);
     }
+
+
 
     shared_ptr<Token> name;
     shared_ptr<Expr> initializer;

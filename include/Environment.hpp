@@ -57,7 +57,7 @@ public:
         throw RuntimeError(name, "Undefined variable got '" + name.lexeme + "'.");
     } 
 
-    auto assign(Token& name, Object& value) -> void {
+    auto assign(Token& name, Object value) -> void {
         if (values.find(name.lexeme) != values.end()) {
             values[name.lexeme] = value;
             return;
