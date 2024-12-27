@@ -22,6 +22,7 @@ class Grouping;
 class Literal;
 class Logical;
 class Set;
+class Super;
 class _This;
 class Unary;
 class Variable;
@@ -45,6 +46,8 @@ public:
     virtual Object acceptLogical(Logical &logical) = 0;
 
     virtual Object acceptSet(Set &set) = 0;
+
+    virtual Object acceptSuper(Super &super) = 0;
 
     virtual Object accept_This(_This &_this) = 0;
 
@@ -213,6 +216,25 @@ public:
     shared_ptr<Expr> object;
     unique_ptr<Token> name;
     shared_ptr<Expr> value;
+};
+
+class Super : public Expr {
+public:
+    Super(unique_ptr<Token> keyword, shared_ptr<Token> method) : keyword(std::move(keyword)), method(std::move(method)), this_id(EXPR_ID++) {}
+
+    Object visit (VisitorExpr &visitor) override {
+        return visitor.acceptSuper(*this);
+    }
+
+
+
+    int get_id() const override {
+        return this_id;
+    }
+
+    int this_id;
+    unique_ptr<Token> keyword;
+    shared_ptr<Token> method;
 };
 
 class _This : public Expr {

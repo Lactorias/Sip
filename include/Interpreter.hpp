@@ -47,6 +47,8 @@ public:
 
     virtual Object acceptSet(Set &set) override;
 
+    virtual Object acceptSuper(Super &super) override;
+
     virtual Object accept_This(_This &_this) override;
 
     virtual Object accept_If(_If &_if) override;

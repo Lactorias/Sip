@@ -35,6 +35,14 @@ auto Resolver::acceptVariable(Variable &variable) -> Object {
 auto Resolver::accept_Class(_Class &_class) -> Object {
     declare(_class.name);
     define(_class.name);
+    if (_class.superclass != nullptr && _class.name->lexeme == _class.superclass->name->lexeme) {
+        sip_logger.error(*_class.superclass->name, "A class can't inherit from itself.");
+    }
+    if (_class.superclass != nullptr) resolve(*_class.superclass);
+    if (_class.superclass != nullptr) {
+        begin_scope();
+        scopes.back()["super"] = true;
+    }
     begin_scope();
     scopes.back()["this"] = true;
     for (auto method : _class.methods) {
@@ -45,6 +53,12 @@ auto Resolver::accept_Class(_Class &_class) -> Object {
         resolve_function(method, decl);
     }
     end_scope();
+    if (_class.superclass != nullptr) end_scope();
+    return {};
+}
+
+auto Resolver::acceptSuper(Super &super) -> Object {
+    resolve_local(super, *super.keyword);
     return {};
 }
 

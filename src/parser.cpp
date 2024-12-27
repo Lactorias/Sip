@@ -115,6 +115,13 @@ auto Parser::declaration() -> std::shared_ptr<Stmt> {
 
 auto Parser::class_declaration() -> std::shared_ptr<Stmt> {
     auto name = consume(Token::TokenType::IDENTIFIER, "Expect class type.");
+
+    shared_ptr<Variable> superclass;
+    if (match(Token::TokenType::LESS)) {
+        consume(Token::TokenType::IDENTIFIER, "Expect superclass name.");
+        superclass = std::make_shared<Variable>(Variable(previous()));
+    }
+
     consume(Token::TokenType::LEFT_BRACE, "Expect '{' before class body.");
 
     auto methods = vector<shared_ptr<Function>>();
@@ -124,7 +131,7 @@ auto Parser::class_declaration() -> std::shared_ptr<Stmt> {
 
     consume(Token::TokenType::RIGHT_BRACE, "Expect '}' after class body.");
 
-    return std::make_shared<_Class>(std::move(name), methods);
+    return std::make_shared<_Class>(std::move(name), superclass, methods);
 }
 
 auto Parser::var_declaration() -> unique_ptr<Stmt> {
@@ -347,6 +354,12 @@ auto Parser::primary() -> unique_ptr<Expr> {
         return std::make_unique<Literal>(nullptr);
     if (match(Token::TokenType::NUMBER, Token::TokenType::STRING))
         return std::make_unique<Literal>(previous()->literal);
+    if (match(Token::TokenType::SUPER)) {
+        auto keyword = previous();
+        consume(Token::TokenType::DOT, "Expect '.' after 'super'.");
+        auto method = consume(Token::TokenType::IDENTIFIER, "Expect superclass method name.");
+        return std::make_unique<Super>(std::move(keyword), std::move(method));
+    }
     if (match(Token::TokenType::THIS))
         return std::make_unique<_This>(previous());
     if (match(Token::TokenType::IDENTIFIER))

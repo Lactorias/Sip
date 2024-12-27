@@ -190,6 +190,7 @@ auto main(int argc, char *argv[]) -> int {
                   "Literal  : const Object value",
                   "Logical  : shared_ptr<Expr> left, unique_ptr<Token> oper, shared_ptr<Expr> right",
                   "Set      : shared_ptr<Expr> object, unique_ptr<Token> name, shared_ptr<Expr> value",
+                  "Super    : unique_ptr<Token> keyword, shared_ptr<Token> method",
                   "_This    : unique_ptr<Token> keyword",
                   "Unary    : unique_ptr<Token> oper, shared_ptr<Expr> right",
                   "Variable : unique_ptr<Token> name",

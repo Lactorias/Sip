@@ -41,6 +41,8 @@ public:
 
     virtual Object acceptExpression(Expression &expression) override;
 
+    virtual Object acceptSuper(Super &super) override;
+
     virtual Object acceptPrint(Print &print) override;
 
     virtual Object acceptStmt(Stmt &stmt) override;

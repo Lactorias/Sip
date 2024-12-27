@@ -63,8 +63,10 @@ struct Func {
 
 struct Lox_Class {
 
-    Lox_Class(std::string name, std::unordered_map<std::string, Lox_Function>& methods) : name(name)
-    , methods(methods) {}
+
+    Lox_Class(std::string name, std::any superclass, std::unordered_map<std::string, Lox_Function>& methods) : name(name)
+        , methods(methods) 
+        , superclass(superclass) {}
 
     operator std::string() {
         return name;
@@ -76,6 +78,8 @@ struct Lox_Class {
 
     auto find_method(std::string name) -> Lox_Function;
 
+    // of type Lox_Class 
+    std::any superclass;
     std::string name;
     std::unordered_map<std::string, Lox_Function> methods;
 };

@@ -50,6 +50,9 @@ auto Lox_Class::find_method(std::string name) -> Lox_Function {
         if (methods.contains(name)) {
             return methods.at(name);
         }
+        if (superclass.type() != typeid(std::nullptr_t)) {
+            return std::any_cast<Lox_Class>(superclass).find_method(name);
+        }
         return Lox_Function("", nullptr, false);
     }
 
