@@ -26,7 +26,7 @@ print 1 + 1;
 ```
 # Syntax Guide
 
-## Types
+## Types + Variables
 
 Lox is a dynamically typed language, this means type checking is left to runtime and you do not need to explicitly state your variable types!
 
