@@ -1,4 +1,4 @@
-# Sip (Lox Interpreter)
+# Sip (Treewalking Lox Interpreter)
 
 The current state of Sip is an ongoing interpreter for the Lox language, built in C++.
 
