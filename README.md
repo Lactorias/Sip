@@ -16,11 +16,11 @@ $ make
 ```
 3. We can now use the language, write up a small .txt file with the details of your program following the syntax guide, and execute it!
 ```
-$ ./compile /path/to/your/test_file.txt
+$ ./compiler /path/to/your/test_file.txt
 ```
 4. Or, get a feel for the language by simply running with no provided file, in this mode you can test small syntax lines to a get a feel for the language.
 ```
-$ ./compile
+$ ./compiler
 
 print 1 + 1;
 ```
